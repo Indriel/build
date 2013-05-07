@@ -77,10 +77,10 @@ public class PnlErfassung extends javax.swing.JPanel implements ActionListener{
 	private User user;
 	private MySQL sql;
 	private DefaultComboBoxModel<WorkType> modelWorkmode;
-	private DefaultComboBoxModel<Integer> modelFromHour;
-	private DefaultComboBoxModel<Integer> modelFromMinute;
-	private DefaultComboBoxModel<Integer> modelToHour;
-	private DefaultComboBoxModel<Integer> modelToMinute;
+	private DefaultComboBoxModel<String> modelFromHour;
+	private DefaultComboBoxModel<String> modelFromMinute;
+	private DefaultComboBoxModel<String> modelToHour;
+	private DefaultComboBoxModel<String> modelToMinute;
 	private DefaultComboBoxModel<String> modelPause;
 
 	/**
@@ -196,7 +196,30 @@ public class PnlErfassung extends javax.swing.JPanel implements ActionListener{
 			cbArt = new JComboBox(modelWorkmode);
 			cbArt.addItemListener(new ItemListener() {
 				public void itemStateChanged(ItemEvent arg0) {
-					//workModeChanged();
+					workModeChanged();
+				}
+
+				private void workModeChanged() {
+					// TODO Auto-generated method stub
+					System.out.println(cbArt.getSelectedItem().toString());
+					if(!(cbArt.getSelectedItem().toString().equals(("Arbeitstag")))){
+						tErfassung.setEnabled(false);
+						cbHoursVon.setEnabled(false);
+						cbHoursBis.setEnabled(false);
+						cbMinutesVon.setEnabled(false);
+						cbMinutesBis.setEnabled(false);
+						cbPause.setEnabled(false);
+					}else{
+						if(cbPause!=null){
+						tErfassung.setEnabled(true);
+						cbHoursVon.setEnabled(true);
+						cbHoursBis.setEnabled(true);
+						cbMinutesVon.setEnabled(true);
+						cbMinutesBis.setEnabled(true);
+						cbPause.setEnabled(true);
+						}
+					}
+					
 				}
 			});
 			cbArt.setPreferredSize(new Dimension(150, 20));
@@ -236,23 +259,30 @@ public class PnlErfassung extends javax.swing.JPanel implements ActionListener{
 	
 	private JComboBox getCbHoursVon() {
 		if(cbHoursVon == null) {
-			modelFromHour = new DefaultComboBoxModel<Integer>();
+			modelFromHour = new DefaultComboBoxModel<String>();
 			cbHoursVon = new JComboBox();
 			cbHoursVon.setModel(modelFromHour);
-			for(int i=1;i<25;i++)
-				modelFromHour.addElement(i);
+			for(int i=6;i<25;i++){
+				if(i<10)
+				modelFromHour.addElement("0"+i);
+				else
+				modelFromHour.addElement(""+i);
+			}
+				
 		}
 		return cbHoursVon;
 	}
 	
 	private JComboBox getCbMinutesVon() {
 		if(cbMinutesVon == null) {
-		    modelFromMinute = new DefaultComboBoxModel<Integer>();
+		    modelFromMinute = new DefaultComboBoxModel<String>();
 			cbMinutesVon = new JComboBox();
 			cbMinutesVon.setModel(modelFromMinute);
-			modelFromMinute.addElement(00);
 			for(int i=15;i<60;i+=15)
-				modelFromMinute.addElement(i);
+				if(i<10)
+					modelFromMinute.addElement("0"+i);
+					else
+					modelFromMinute.addElement(""+i);
 		}
 		return cbMinutesVon;
 	}
@@ -281,22 +311,30 @@ public class PnlErfassung extends javax.swing.JPanel implements ActionListener{
 	
 	private JComboBox getCbHoursBis() {
 		if(cbHoursBis == null) {
-			modelToHour = new DefaultComboBoxModel<Integer>();
+			modelToHour = new DefaultComboBoxModel<String>();
 			cbHoursBis = new JComboBox();
 			cbHoursBis.setModel(modelToHour);
-			for(int i=1;i<25;i++)
-				modelToHour.addElement(i);
+			for(int i=6;i<25;i++){
+				if(i<10)
+					modelToHour.addElement("0"+i);
+					else
+					modelToHour.addElement(""+i);
+				}
 		}
 		return cbHoursBis;
 	}
 	
 	private JComboBox getCbMinutesBis() {
 		if(cbMinutesBis == null) {
-			modelToMinute = new DefaultComboBoxModel<Integer>();
+			modelToMinute = new DefaultComboBoxModel<String>();
 			cbMinutesBis = new JComboBox();
 			cbMinutesBis.setModel(modelToMinute);
-			for(int i=0;i<60;i+=15)
-				modelToMinute.addElement(i);
+			for(int i=0;i<60;i+=15){
+				if(i<10)
+					modelToMinute.addElement("0"+i);
+					else
+					modelToMinute.addElement(""+i);
+			}
 		}
 		return cbMinutesBis;
 	}
