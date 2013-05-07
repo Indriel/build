@@ -90,6 +90,8 @@ public class PnlErfassung extends javax.swing.JPanel implements ActionListener{
 		
 	public PnlErfassung() {
 		super();
+		sql=MySQL.getInstance();
+		initialize();
 		initGUI();
 	}
 	
