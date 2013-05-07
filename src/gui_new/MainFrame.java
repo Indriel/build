@@ -1,5 +1,7 @@
 package gui_new;
 
+import gui.LoginFrame;
+
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -14,6 +16,9 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.SwingUtilities;
+
+import data.User;
+import database.MySQL;
 
 
 /**
@@ -34,15 +39,18 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener{
 	private JButton btnLogout;
 	private JLabel lblUserName;
 	private JPanel userData = null;
-	/**
-	* Auto-generated main method to display this JFrame
-	*/
+	
+	private User loggedInUser;
+	private MySQL database;
+	
 	public static void main(String[] args) {
-		new MainFrame();
+		new Login();
 	}
 	
-	public MainFrame() {
+	public MainFrame(User loginUser) {
 		super();
+		this.loggedInUser = loginUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 	
@@ -70,7 +78,7 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener{
 					lblUserName = new JLabel();
 					lblUserName.setLayout(null);
 					userData.add(lblUserName);
-					lblUserName.setText("User: Admin");
+					lblUserName.setText("User: " + this.loggedInUser.getName());
 					lblUserName.setBounds(14, 9, 91, 21);
 				}
 				{

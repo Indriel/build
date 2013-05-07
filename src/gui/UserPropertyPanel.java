@@ -25,6 +25,7 @@ import output.Last_Done_Property;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.sql.SQLException;
 
 public class UserPropertyPanel extends JPanel {
 
@@ -55,7 +56,7 @@ public class UserPropertyPanel extends JPanel {
 	private JLabel label_5;
 	private JLabel label_6;
 	private JLabel jLabelStandardWorkTime;
-	
+
 	private DefaultComboBoxModel<Integer> modelFromHour;
 	private DefaultComboBoxModel<Integer> modelFromMinute;
 	private DefaultComboBoxModel<Integer> modelToHour;
@@ -72,7 +73,7 @@ public class UserPropertyPanel extends JPanel {
 	private JLabel lblNewLabel_4;
 	private MySQL sql = null;
 	private JLabel lblNewLabel_5;
-	
+
 	/**
 	 * Create the panel.
 	 */
@@ -83,7 +84,9 @@ public class UserPropertyPanel extends JPanel {
 		setLayout(new BorderLayout(0, 0));
 		add(getJPanelNorth(), BorderLayout.NORTH);
 		add(getJPanelCenter(), BorderLayout.CENTER);
-		Last_Done_Property ldp = new Last_Done_Property(jComboBoxFromHour, jComboBoxFromMinute, jComboBoxToHour, jComboBoxToMinute, jComboBoxBreak);
+		Last_Done_Property ldp = new Last_Done_Property(jComboBoxFromHour,
+				jComboBoxFromMinute, jComboBoxToHour, jComboBoxToMinute,
+				jComboBoxBreak);
 
 	}
 
@@ -106,15 +109,18 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jPanelNorth;
 	}
+
 	private JLabel getJLabelChangePassword() {
 		if (jLabelChangePassword == null) {
 			jLabelChangePassword = new JLabel(" Passwort \u00E4ndern");
 			jLabelChangePassword.setPreferredSize(new Dimension(530, 20));
 			jLabelChangePassword.setFont(new Font("Tahoma", Font.PLAIN, 15));
-			jLabelChangePassword.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
+			jLabelChangePassword.setBorder(new MatteBorder(1, 1, 1, 1,
+					(Color) new Color(0, 0, 0)));
 		}
 		return jLabelChangePassword;
 	}
+
 	private JLabel getLblAltesPasswort() {
 		if (lblAltesPasswort == null) {
 			lblAltesPasswort = new JLabel("Altes Passwort:");
@@ -122,6 +128,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblAltesPasswort;
 	}
+
 	private JLabel getJLabelNeusPasswort() {
 		if (jLabelNeusPasswort == null) {
 			jLabelNeusPasswort = new JLabel("Neus Passwort:");
@@ -129,13 +136,17 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jLabelNeusPasswort;
 	}
+
 	private JLabel getJLabelNeuesPasswortWiederholen() {
 		if (jLabelNeuesPasswortWiederholen == null) {
-			jLabelNeuesPasswortWiederholen = new JLabel("Neues Passwort wiederholen:");
-			jLabelNeuesPasswortWiederholen.setPreferredSize(new Dimension(180, 14));
+			jLabelNeuesPasswortWiederholen = new JLabel(
+					"Neues Passwort wiederholen:");
+			jLabelNeuesPasswortWiederholen.setPreferredSize(new Dimension(180,
+					14));
 		}
 		return jLabelNeuesPasswortWiederholen;
 	}
+
 	private JPasswordField getPasswordFieldOld() {
 		if (passwordFieldOld == null) {
 			passwordFieldOld = new JPasswordField();
@@ -143,6 +154,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return passwordFieldOld;
 	}
+
 	private JPasswordField getPasswordFieldNew() {
 		if (passwordFieldNew == null) {
 			passwordFieldNew = new JPasswordField();
@@ -150,6 +162,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return passwordFieldNew;
 	}
+
 	private JPasswordField getPasswordFieldRepeatNew() {
 		if (passwordFieldRepeatNew == null) {
 			passwordFieldRepeatNew = new JPasswordField();
@@ -157,6 +170,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return passwordFieldRepeatNew;
 	}
+
 	private JLabel getLblNewLabel() {
 		if (lblNewLabel == null) {
 			lblNewLabel = new JLabel("");
@@ -164,6 +178,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblNewLabel;
 	}
+
 	private JLabel getLblNewLabel_1() {
 		if (lblNewLabel_1 == null) {
 			lblNewLabel_1 = new JLabel("");
@@ -171,6 +186,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblNewLabel_1;
 	}
+
 	private JLabel getLblNewLabel_2() {
 		if (lblNewLabel_2 == null) {
 			lblNewLabel_2 = new JLabel("");
@@ -178,6 +194,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblNewLabel_2;
 	}
+
 	private JPanel getJPanelCenter() {
 		if (jPanelCenter == null) {
 			jPanelCenter = new JPanel();
@@ -188,12 +205,14 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jPanelCenter;
 	}
+
 	private JPanel getJPanelCenterNorth() {
 		if (jPanelCenterNorth == null) {
 			jPanelCenterNorth = new JPanel();
 			jPanelCenterNorth.setPreferredSize(new Dimension(550, 170));
 			jPanelCenterNorth.setEnabled(false);
-			jPanelCenterNorth.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
+			jPanelCenterNorth.setLayout(new FlowLayout(FlowLayout.CENTER, 15,
+					10));
 			jPanelCenterNorth.add(getJLabelStandardWorkTime());
 			jPanelCenterNorth.add(getLabel());
 			jPanelCenterNorth.add(getJComboBoxFromHour());
@@ -212,6 +231,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jPanelCenterNorth;
 	}
+
 	private JLabel getLabel() {
 		if (label == null) {
 			label = new JLabel("Von:");
@@ -219,6 +239,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label;
 	}
+
 	private JComboBox getJComboBoxFromHour() {
 		if (jComboBoxFromHour == null) {
 			modelFromHour = new DefaultComboBoxModel<Integer>();
@@ -242,6 +263,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jComboBoxFromHour;
 	}
+
 	private JComboBox getJComboBoxFromMinute() {
 		if (jComboBoxFromMinute == null) {
 			modelFromMinute = new DefaultComboBoxModel<Integer>();
@@ -254,6 +276,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jComboBoxFromMinute;
 	}
+
 	private JLabel getLabel_1() {
 		if (label_1 == null) {
 			label_1 = new JLabel("                    ");
@@ -261,6 +284,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_1;
 	}
+
 	private JLabel getLabel_2() {
 		if (label_2 == null) {
 			label_2 = new JLabel("Bis:");
@@ -268,6 +292,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_2;
 	}
+
 	private JComboBox getJComboBoxToHour() {
 		if (jComboBoxToHour == null) {
 			modelToHour = new DefaultComboBoxModel<Integer>();
@@ -293,6 +318,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jComboBoxToHour;
 	}
+
 	private JComboBox getJComboBoxToMinute() {
 		if (jComboBoxToMinute == null) {
 			modelToMinute = new DefaultComboBoxModel<Integer>();
@@ -305,6 +331,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jComboBoxToMinute;
 	}
+
 	private JLabel getLabel_3() {
 		if (label_3 == null) {
 			label_3 = new JLabel("                    ");
@@ -312,6 +339,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_3;
 	}
+
 	private JLabel getLabel_4() {
 		if (label_4 == null) {
 			label_4 = new JLabel("Pause:");
@@ -319,6 +347,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_4;
 	}
+
 	private JComboBox getJComboBoxBreak() {
 		if (jComboBoxBreak == null) {
 			modelBreak = new DefaultComboBoxModel<Integer>();
@@ -332,6 +361,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jComboBoxBreak;
 	}
+
 	private JLabel getLabel_5() {
 		if (label_5 == null) {
 			label_5 = new JLabel("Minuten");
@@ -339,6 +369,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_5;
 	}
+
 	private JLabel getLabel_6() {
 		if (label_6 == null) {
 			label_6 = new JLabel("                    ");
@@ -346,25 +377,31 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return label_6;
 	}
+
 	private JLabel getJLabelStandardWorkTime() {
 		if (jLabelStandardWorkTime == null) {
 			jLabelStandardWorkTime = new JLabel(" Standard Arbeitszeit");
 			jLabelStandardWorkTime.setPreferredSize(new Dimension(530, 20));
 			jLabelStandardWorkTime.setFont(new Font("Tahoma", Font.PLAIN, 15));
-			jLabelStandardWorkTime.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
+			jLabelStandardWorkTime.setBorder(new MatteBorder(1, 1, 1, 1,
+					(Color) new Color(0, 0, 0)));
 		}
 		return jLabelStandardWorkTime;
 	}
+
 	private JPanel getJPanelCenterCenter() {
 		if (jPanelCenterCenter == null) {
 			jPanelCenterCenter = new JPanel();
 			jPanelCenterCenter.setPreferredSize(new Dimension(550, 130));
 			jPanelCenterCenter.setLayout(new BorderLayout(0, 0));
-			jPanelCenterCenter.add(getJPanelCenterCenterNorth(), BorderLayout.NORTH);
-			jPanelCenterCenter.add(getJPanelCenterCenterSouth(), BorderLayout.SOUTH);
+			jPanelCenterCenter.add(getJPanelCenterCenterNorth(),
+					BorderLayout.NORTH);
+			jPanelCenterCenter.add(getJPanelCenterCenterSouth(),
+					BorderLayout.SOUTH);
 		}
 		return jPanelCenterCenter;
 	}
+
 	private JPanel getJPanelCenterCenterNorth() {
 		if (jPanelCenterCenterNorth == null) {
 			jPanelCenterCenterNorth = new JPanel();
@@ -374,6 +411,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jPanelCenterCenterNorth;
 	}
+
 	private JButton getBtnCssGenerieren() {
 		if (btnCssGenerieren == null) {
 			btnCssGenerieren = new JButton("CSS generieren");
@@ -385,7 +423,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return btnCssGenerieren;
 	}
-	
+
 	private JPanel getJPanelCenterCenterSouth() {
 		if (jPanelCenterCenterSouth == null) {
 			jPanelCenterCenterSouth = new JPanel();
@@ -394,6 +432,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jPanelCenterCenterSouth;
 	}
+
 	private JLabel getJLabelMessageLine() {
 		if (jLabelMessageLine == null) {
 			jLabelMessageLine = new JLabel("");
@@ -401,6 +440,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return jLabelMessageLine;
 	}
+
 	private JButton getBtnPasswortAendern() {
 		if (btnPasswortAendern == null) {
 			btnPasswortAendern = new JButton("Passwort \u00E4ndern");
@@ -412,6 +452,7 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return btnPasswortAendern;
 	}
+
 	private JLabel getLblNewLabel_3() {
 		if (lblNewLabel_3 == null) {
 			lblNewLabel_3 = new JLabel("");
@@ -419,18 +460,21 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblNewLabel_3;
 	}
-	
+
 	private JButton getBtnStandardarbeitszeitUebernehmen() {
 		if (btnStandardarbeitszeitUebernehmen == null) {
-			btnStandardarbeitszeitUebernehmen = new JButton("Standardarbeitszeit \u00FCbernehmen");
-			btnStandardarbeitszeitUebernehmen.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					changeStandardWorkTime();
-				}
-			});
+			btnStandardarbeitszeitUebernehmen = new JButton(
+					"Standardarbeitszeit \u00FCbernehmen");
+			btnStandardarbeitszeitUebernehmen
+					.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							changeStandardWorkTime();
+						}
+					});
 		}
 		return btnStandardarbeitszeitUebernehmen;
 	}
+
 	private JLabel getLblNewLabel_4() {
 		if (lblNewLabel_4 == null) {
 			lblNewLabel_4 = new JLabel("");
@@ -438,33 +482,41 @@ public class UserPropertyPanel extends JPanel {
 		}
 		return lblNewLabel_4;
 	}
-	
+
 	private void generateCss() {
 		CSS_Creator css = new CSS_Creator();
 		jLabelMessageLine.setText("CSS wurde erstellt!");
 	}
-	
+
 	private void changePassword() {
 		String pwd1 = new String(passwordFieldNew.getPassword());
 		String pwd2 = new String(passwordFieldRepeatNew.getPassword());
-		if(sql.login(user.getName(), passwordFieldOld.getPassword()) != null) 
-		{
-			if(pwd1.compareTo(pwd2) == 0) {
-				sql.setPassword(user.getId(), passwordFieldNew.getPassword());
-				jLabelMessageLine.setText("Passwort geändert");
-			}
-			else {
-				jLabelMessageLine.setText("Neue Passwörter stimmen nicht überein!");	
-			}
+		try {
+			if (sql.login(user.getName(),
+					new String(passwordFieldOld.getPassword())) != null) {
+				if (pwd1.compareTo(pwd2) == 0) {
+					sql.setPassword(user.getId(),
+							passwordFieldNew.getPassword());
+					jLabelMessageLine.setText("Passwort geändert");
+				} else {
+					jLabelMessageLine
+							.setText("Neue Passwörter stimmen nicht überein!");
+				}
+			} else
+				jLabelMessageLine.setText("Alter Passwort ist falsch!");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		else
-			jLabelMessageLine.setText("Alter Passwort ist falsch!");
 	}
-	
+
 	private void changeStandardWorkTime() {
-		Last_Done_Property ldp = new Last_Done_Property(user.getName(), jComboBoxFromHour, jComboBoxFromMinute, jComboBoxToHour, jComboBoxToMinute, jComboBoxBreak);
+		Last_Done_Property ldp = new Last_Done_Property(user.getName(),
+				jComboBoxFromHour, jComboBoxFromMinute, jComboBoxToHour,
+				jComboBoxToMinute, jComboBoxBreak);
 		jLabelMessageLine.setText("Standardeinstellungen geändert!");
 	}
+
 	private JLabel getLblNewLabel_5() {
 		if (lblNewLabel_5 == null) {
 			lblNewLabel_5 = new JLabel("");

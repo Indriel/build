@@ -5,29 +5,22 @@ package gui;
 //import html.HTML_Creator;
 
 import java.awt.BorderLayout;
-import javax.swing.JPanel;
-import javax.swing.JFrame;
-import java.awt.FlowLayout;
 import java.awt.Dimension;
-import java.awt.Robot;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Toolkit;
+import java.sql.SQLException;
 
-import javax.swing.JComponent;
+import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.JButton;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import output.Last_Done_Property;
-
 import data.User;
 import database.MySQL;
-
-import java.awt.Font;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 public class LoginFrame extends JFrame {
 
@@ -61,6 +54,7 @@ public class LoginFrame extends JFrame {
 		this.setSize(300, 180);
 		this.setTitle("Login");
 		this.setResizable(false);
+		this.setVisible(true);
 		this.setContentPane(getJContentPane());
 		getRootPane().setDefaultButton(jButtonSubmit);
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -174,7 +168,12 @@ public class LoginFrame extends JFrame {
 			return;
 		}
 	
-		this.user = mysql.login(strUser, password);
+		try {
+			this.user = mysql.login(strUser, password.toString());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		if(user != null) {
 			this.login();
