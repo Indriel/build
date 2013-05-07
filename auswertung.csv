@@ -1,0 +1,10 @@
+Kevin Pirolt;2013-04;
+Datum;Tag;Arbeitsbeginn;Arbeitsende;Pause;Ist Arbeitsstunden;Ueberstunden;Zeitausgleich;Anmerkung;
+04;Do;00:00;00:00;00:00;00:00;00:00;;Urlaub;
+08;Mo;08:00;18:30;00:15;10:15;01:15;;Arbeitstag;
+09;Di;08:00;18:30;00:15;10:15;01:15;;Arbeitstag;
+10;Mi;00:00;00:00;00:00;00:00;00:00;;Feiertag;
+11;Do;00:00;00:00;00:00;00:00;00:00;;Urlaub;
+12;Fr;00:00;00:00;00:00;00:00;00:00;;Krankenstand;
+;;;;;Gesamt im Monat:;02:30;;;
+;;;;;Gesamt bis jetzt:;02:30;;;
