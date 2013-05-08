@@ -18,6 +18,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import data.User;
+import database.MySQL;
+
 /**
 * This code was edited or generated using CloudGarden's Jigloo
 * SWT/Swing GUI Builder, which is free for non-commercial
@@ -53,14 +56,20 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 	private JTextField txtPasswortAendernAlt;
 	private JLabel jLabel1;
 	private JPanel panelUserArbeitszeitFestlegen;
+	
+	private MySQL database;
+	private User loggedInUser;
 
 	/**
 	* Auto-generated main method to display this 
 	* JPanel inside a new JFrame.
+	 * @param loggedInUser 
 	*/
 		
-	public UserPanel() {
+	public UserPanel(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 	

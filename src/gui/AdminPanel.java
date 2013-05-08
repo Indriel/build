@@ -522,8 +522,8 @@ public class AdminPanel extends JPanel {
 				if(jTextFieldPassword.getText().length() != 0)
 				{
 					sql.newEmployee(jTextFieldEmployeeName.getText(), jTextFieldPassword.getText(), begin);
-					sql.updateComboBoxUser(dcbmRemove);
-					sql.updateComboBoxUser(dcbmReset);
+					//sql.updateComboBoxUser(dcbmRemove);
+					//sql.updateComboBoxUser(dcbmReset);
 					jTextFieldEmployeeName.setText("");
 					jTextFieldPassword.setText("");
 					jLabelMessageLineBenutzer.setText("Benutzer wurde angelegt!");
@@ -597,7 +597,7 @@ public class AdminPanel extends JPanel {
 			jComboBoxRemoveEmployee = new JComboBox<User>(dcbmRemove);
 			jComboBoxRemoveEmployee.setPreferredSize(new Dimension(120, 20));
 			
-			sql.updateComboBoxUser(dcbmRemove);
+			//sql.updateComboBoxUser(dcbmRemove);
 		}
 		return jComboBoxRemoveEmployee;
 	}
@@ -710,7 +710,7 @@ public class AdminPanel extends JPanel {
 			dcbmReset = new DefaultComboBoxModel<User>();
 			jComboBoxResetPasswordName = new JComboBox<User>(dcbmReset);
 			jComboBoxResetPasswordName.setPreferredSize(new Dimension(120, 20));
-			sql.updateComboBoxUser(dcbmReset);
+			//sql.updateComboBoxUser(dcbmReset);
 		}
 		return jComboBoxResetPasswordName;
 	}

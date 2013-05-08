@@ -9,6 +9,9 @@ import javax.swing.WindowConstants;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
+import data.User;
+import database.MySQL;
+
 /**
 * This code was edited or generated using CloudGarden's Jigloo
 * SWT/Swing GUI Builder, which is free for non-commercial
@@ -32,14 +35,14 @@ public class AdminPanel extends javax.swing.JPanel {
 	private AdminZeitenPanel tpaneAdmin_panelZeiten_ZeitenSettings;
 	private AdminTaetigkeitenPanel tpaneAdmin_panelTaetigkeiten_TSettings;
 
-	/**
-	* Auto-generated main method to display this 
-	* JPanel inside a new JFrame.
-	*/
+	private MySQL database;
+	private User loggedInUser;
 		
 	
-	public AdminPanel() {
+	public AdminPanel(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 	

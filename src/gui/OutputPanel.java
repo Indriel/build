@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -92,7 +93,13 @@ public class OutputPanel extends JPanel {
 			
 			if(user.getName().compareTo("admin") == 0)
 			{
-				Vector<User> tmp = sql.getUsers();
+				Vector<User> tmp = null;
+				try {
+					tmp = sql.getUsers();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				for(Iterator<User> i = tmp.iterator(); i.hasNext();)
 				{
 					User usr = (User)i.next();

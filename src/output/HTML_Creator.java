@@ -151,7 +151,7 @@ public class HTML_Creator {
 
 			Element trEle = dom.createElement("tr");
 //			trEle.setAttribute("BezeichnungG", b.getBezeichnung());
-
+			
 			for(Iterator i = d.iterator(); i.hasNext();){
 			//create author element and author text node and attach it to bookElement
 				String str = (String)i.next();

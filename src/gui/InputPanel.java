@@ -162,7 +162,7 @@ public class InputPanel extends JPanel {
 			
 			if(user.getName().compareTo("admin") == 0)
 			{
-				sql.updateComboBoxUser(modelEmployee);
+				//sql.updateComboBoxUser(modelEmployee);
 			} else {
 				modelEmployee.addElement(user);
 			}

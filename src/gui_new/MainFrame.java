@@ -62,7 +62,7 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener{
 			pack();
 			this.setSize(900, 721);
 			{
-				ap = new PanelAll();
+				ap = new PanelAll(this.loggedInUser);
 				ap.setVisible(true);
 				this.getContentPane().add(ap,BorderLayout.CENTER);
 			}
@@ -86,6 +86,7 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener{
 					userData.add(btnLogout);
 					btnLogout.setText("Logout");
 					btnLogout.setBounds(123, 6, 85, 28);
+					btnLogout.addActionListener(this);
 				}
 			}
 		} catch (Exception e) {
@@ -97,7 +98,8 @@ public class MainFrame extends javax.swing.JFrame implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnLogout) {
-			
+			new Login();
+			this.dispose();
 		}
 	}
 

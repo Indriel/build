@@ -38,7 +38,7 @@ public class Main {
 			lf.getContentPane().add(pnlTest, BorderLayout.CENTER);
 			pnlTest.setPreferredSize(new java.awt.Dimension(732, 431));
 			{
-				ap = new AdminPanel();
+				//ap = new AdminPanel();
 				ap.setVisible(true);
 				pnlTest.add(ap);
 			}

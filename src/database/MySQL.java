@@ -103,16 +103,14 @@ public class MySQL {
 		return tmp;
 	}
 
-	public Vector<String> getUsernames() {
-		Vector<String> users = new Vector<String>();
+	public Vector<User> getUsers() throws SQLException {
+		Vector<User> users = new Vector<User>();
 
-		try {
-			ResultSet rs = stmt.executeQuery("select * from mitarbeiter");
-			while (rs.next()) {
-				users.add(rs.getString("name"));
-			}
-		} catch (Exception e) {
-			System.out.println("Exception getUsers(): " + e.getMessage());
+		PreparedStatement pps = this.con
+				.prepareStatement("select id,name from mitarbeiter");
+		ResultSet rs = pps.executeQuery();
+		while (rs.next()) {
+			users.add(new User(rs.getInt(1), rs.getString(2)));
 		}
 
 		return users;
@@ -214,7 +212,7 @@ public class MySQL {
 		return districts;
 	}
 
-	public Vector<User> getUsers() {
+	/*public Vector<User> getUsers() {
 
 		Vector<User> tmp = new Vector<User>();
 
@@ -229,7 +227,7 @@ public class MySQL {
 		}
 
 		return tmp;
-	}
+	}*/
 
 	public boolean writeEmployeeDay(int m_id, Date datum, int fromMinute,
 			int fromHour, int toMinute, int toHour, int pause, int t_id) {
@@ -833,10 +831,10 @@ public class MySQL {
 		return false;
 	}
 
-	public void updateComboBoxUser(DefaultComboBoxModel<User> dcbm) {
+	public void updateComboBoxUser(DefaultComboBoxModel<User> dcbm) throws SQLException {
 		dcbm.removeAllElements();
-		for (Iterator i = getUsers().iterator(); i.hasNext();) {
-			User tmpUser = (User) i.next();
+		for (Iterator<User> i = getUsers().iterator(); i.hasNext();) {
+			User tmpUser = i.next();
 			if (tmpUser.getName().compareTo("admin") != 0)
 				dcbm.addElement(tmpUser);
 		}

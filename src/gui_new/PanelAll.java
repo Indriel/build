@@ -1,26 +1,24 @@
 package gui_new;
-import java.awt.BorderLayout;
 
-import java.awt.Dimension;
+import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.WindowConstants;
-import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
+import data.User;
+import database.MySQL;
+
 /**
-* This code was edited or generated using CloudGarden's Jigloo
-* SWT/Swing GUI Builder, which is free for non-commercial
-* use. If Jigloo is being used commercially (ie, by a corporation,
-* company or business for any purpose whatever) then you
-* should purchase a license for each developer using Jigloo.
-* Please visit www.cloudgarden.com for details.
-* Use of Jigloo implies acceptance of these licensing terms.
-* A COMMERCIAL LICENSE HAS NOT BEEN PURCHASED FOR
-* THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED
-* LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
-*/
+ * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
+ * Builder, which is free for non-commercial use. If Jigloo is being used
+ * commercially (ie, by a corporation, company or business for any purpose
+ * whatever) then you should purchase a license for each developer using Jigloo.
+ * Please visit www.cloudgarden.com for details. Use of Jigloo implies
+ * acceptance of these licensing terms. A COMMERCIAL LICENSE HAS NOT BEEN
+ * PURCHASED FOR THIS MACHINE, SO JIGLOO OR THIS CODE CANNOT BE USED LEGALLY FOR
+ * ANY CORPORATE OR COMMERCIAL PURPOSE.
+ */
 public class PanelAll extends javax.swing.JPanel {
 	private JTabbedPane tpaneAllTabs;
 	private JScrollPane scrpaneAdministration;
@@ -36,16 +34,16 @@ public class PanelAll extends javax.swing.JPanel {
 	private pnlAuswertung panelAuswertung;
 	private UserPanel panelMitarbeiter;
 
-	/**
-	* Auto-generated main method to display this 
-	* JPanel inside a new JFrame.
-	*/
-		
-	public PanelAll() {
+	private MySQL database;
+	private User loggedInUser;
+
+	public PanelAll(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
-	
+
 	private void initGUI() {
 		try {
 			BorderLayout thisLayout = new BorderLayout();
@@ -60,9 +58,7 @@ public class PanelAll extends javax.swing.JPanel {
 					panelErfassungTab.setLayout(panelErfassungTabLayout);
 					this.tpaneAllTabs.addTab("Erfassung", panelErfassungTab);
 					{
-						//scrpaneErfassungTab = new JScrollPane();
-						//panelErfassungTab.add(scrpaneErfassungTab, BorderLayout.CENTER);
-						this.panelErfassung = new PnlErfassung();
+						this.panelErfassung = new PnlErfassung(this.loggedInUser);
 						this.panelErfassung.setVisible(true);
 						this.panelErfassungTab.add(panelErfassung);
 					}
@@ -72,11 +68,8 @@ public class PanelAll extends javax.swing.JPanel {
 					panelAuswertugnTab.setLayout(panelAuswertugnTabLayout);
 					this.tpaneAllTabs.addTab("Auswertung", panelAuswertugnTab);
 					{
-						//scrpaneAuswertungTab = new JScrollPane();
-						//panelAuswertugnTab.add(scrpaneAuswertungTab, BorderLayout.CENTER);
-						this.panelAuswertung = new pnlAuswertung();
+						this.panelAuswertung = new pnlAuswertung(this.loggedInUser);
 						this.panelAuswertung.setVisible(true);
-						//this.scrpaneAuswertungTab.add(this.panelAuswertung);
 						this.panelAuswertugnTab.add(panelAuswertung);
 					}
 
@@ -85,30 +78,24 @@ public class PanelAll extends javax.swing.JPanel {
 					panelUserTab.setLayout(panelUserTabLayout);
 					this.tpaneAllTabs.addTab("Mitarbeiter", panelUserTab);
 					{
-						//scrpaneMitarbeiterTab = new JScrollPane();
-						//panelUserTab.add(scrpaneMitarbeiterTab, BorderLayout.CENTER);
-						this.panelMitarbeiter = new UserPanel();
+						this.panelMitarbeiter = new UserPanel(this.loggedInUser);
 						this.panelMitarbeiter.setVisible(true);
-						//this.scrpaneMitarbeiterTab.add(this.panelMitarbeiter);
 						this.panelUserTab.add(panelMitarbeiter);
 					}
 
-					this.panelAdminTab = new JPanel();
-					BorderLayout panelAdminTabLayout = new BorderLayout();
-					panelAdminTab.setLayout(panelAdminTabLayout);
-					this.tpaneAllTabs.addTab("Administration", panelAdminTab);
-					{
-						//scrpaneAdministration = new JScrollPane();
-						//scrpaneAdministration.setVisible(true);
-						//panelAdminTab.add(scrpaneAdministration, BorderLayout.CENTER);
+					if (this.loggedInUser.getName().equals("admin")) {
+						this.panelAdminTab = new JPanel();
+						BorderLayout panelAdminTabLayout = new BorderLayout();
+						panelAdminTab.setLayout(panelAdminTabLayout);
+						this.tpaneAllTabs.addTab("Administration",
+								panelAdminTab);
 						{
-							this.panelAdmin = new AdminPanel();
+							this.panelAdmin = new AdminPanel(this.loggedInUser);
 							this.panelAdmin.setVisible(true);
-							//scrpaneAdministration.add(this.panelAdmin);
 							this.panelAdminTab.add(panelAdmin);
 						}
 					}
-					
+
 				}
 			}
 		} catch (Exception e) {
