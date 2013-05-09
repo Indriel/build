@@ -83,7 +83,7 @@ public class Login extends javax.swing.JFrame implements ActionListener {
 				btnLogin = new JButton();
 				getContentPane().add(btnLogin);
 				btnLogin.setText("Login");
-				btnLogin.setBounds(20, 143, 58, 28);
+				btnLogin.setBounds(20, 143, 79, 28);
 				btnLogin.addActionListener(this);
 			}
 			pack();

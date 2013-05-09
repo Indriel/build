@@ -1,21 +1,15 @@
 package gui_new;
 
-import gui.LoginFrame;
-
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-
 import javax.swing.JLabel;
-
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
-import javax.swing.SwingUtilities;
 
 import data.User;
 import database.MySQL;
@@ -35,12 +29,17 @@ import database.MySQL;
 */
 public class MainFrame extends javax.swing.JFrame implements ActionListener{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private PanelAll ap = null;
 	private JButton btnLogout;
 	private JLabel lblUserName;
 	private JPanel userData = null;
 	
 	private User loggedInUser;
+	@SuppressWarnings("unused")
 	private MySQL database;
 	
 	public static void main(String[] args) {

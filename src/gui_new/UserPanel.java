@@ -4,6 +4,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -130,14 +134,15 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 				{
 					lblPasswortAendernInfo = new JLabel();
 					panelUserPasswortAendern.add(lblPasswortAendernInfo);
-					lblPasswortAendernInfo.setBounds(12, 216, 699, 10);
+					lblPasswortAendernInfo.setBounds(12, 204, 699, 22);
 					lblPasswortAendernInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
 					btnPasswortAendern = new JButton();
 					panelUserPasswortAendern.add(btnPasswortAendern);
 					btnPasswortAendern.setText("Ändern");
-					btnPasswortAendern.setBounds(501, 92, 68, 28);
+					btnPasswortAendern.setBounds(501, 92, 81, 28);
+					btnPasswortAendern.addActionListener(this);
 				}
 			}
 			{
@@ -208,14 +213,15 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 				{
 					lblStandZeitInfo = new JLabel();
 					panelUserArbeitszeitFestlegen.add(lblStandZeitInfo);
-					lblStandZeitInfo.setBounds(12, 216, 699, 10);
+					lblStandZeitInfo.setBounds(12, 203, 699, 23);
 					lblStandZeitInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
 					btnStandZeitFestlegen = new JButton();
 					panelUserArbeitszeitFestlegen.add(btnStandZeitFestlegen);
 					btnStandZeitFestlegen.setText("Festlegen");
-					btnStandZeitFestlegen.setBounds(303, 95, 95, 28);
+					btnStandZeitFestlegen.setBounds(303, 95, 109, 28);
+					btnStandZeitFestlegen.addActionListener(this);
 				}
 			}
 		} catch (Exception e) {
@@ -229,21 +235,41 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 			checkPasswords();
 		}
 		if(e.getSource() == this.btnStandZeitFestlegen) {
-			
+			this.setNewStandardWorkingTime();
+		}
+	}
+
+	private void setNewStandardWorkingTime() {
+		Time vont = Time.valueOf(this.cmbStandZeitVonH.getSelectedItem()+":"+this.cmbStandZeitVonMIN.getSelectedItem()+":00");
+		Time bist = Time.valueOf(this.cmbStandZeitBisH.getSelectedItem()+":"+this.cmbStandZeitBisMIN.getSelectedItem()+":00");
+		int pause = Integer.parseInt((String) this.cmbStandZeitPause.getSelectedItem());
+		try {
+			if(this.database.setNewStandardWorkingTime(this.loggedInUser, vont, bist, pause) == 0)
+				this.lblStandZeitInfo.setText("Update der Standardarbeitszeit fehlgeschlagen");
+			else
+				this.lblStandZeitInfo.setText("Update der Standardarbeitszeit erfolgreich");
+		} catch (SQLException e) {
+			this.lblStandZeitInfo.setText("Verbindung zur Datenbank Fehlgeschlagen");
 		}
 	}
 
 	private void checkPasswords() {
 		try {
 			this.database.checkPasswordCorrect(new String(this.txtPasswortAendernAlt.getPassword()));
-			if(this.txtPasswortAendernNeu.getPassword().equals(this.txtPasswortAendernNeuWdh.getPassword()))
+			String passwd = new String(this.txtPasswortAendernNeu.getPassword());
+			String passwdwdh = new String(this.txtPasswortAendernNeuWdh.getPassword());
+			if(passwd.equals(passwdwdh))
 				this.database.resetPassword(this.loggedInUser.getId(), new String(this.txtPasswortAendernNeu.getPassword()));
-			else
+			else {
 				this.lblPasswortAendernInfo.setText("Neues Passwort stimmt nich überein");
+				this.txtPasswortAendernNeu.setText("");
+				this.txtPasswortAendernNeuWdh.setText("");
+			}
 		} catch (SQLException e) {
 			this.lblPasswortAendernInfo.setText("Error Connecting to Database");
 		} catch (WrongPasswordException e) {
 			this.lblPasswortAendernInfo.setText("Altes Passwort falsch");
+			this.txtPasswortAendernAlt.setText("");
 		}
 	}
 

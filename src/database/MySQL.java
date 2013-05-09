@@ -945,4 +945,15 @@ public class MySQL {
 			retValue = true;
 		return retValue;
 	}
+	
+	public int setNewStandardWorkingTime(User u, Time von, Time bis, int pause) throws SQLException {
+		this.connect();
+		String stm = "update mitarbeiter set stand_von=?, stand_bis=?, stand_pause=? where id=?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setTime(1, von);
+		pps.setTime(2, bis);
+		pps.setInt(3, pause);
+		pps.setInt(4, u.getId());
+		return pps.executeUpdate();
+	}
 }
