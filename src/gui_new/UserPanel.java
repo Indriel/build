@@ -3,6 +3,7 @@ package gui_new;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -10,6 +11,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JPasswordField;
 
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -18,8 +20,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import model.TimeCBModel;
+
 import data.User;
 import database.MySQL;
+import database.WrongPasswordException;
 
 /**
 * This code was edited or generated using CloudGarden's Jigloo
@@ -41,19 +46,19 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 	private JLabel jLabel5;
 	private JButton btnStandZeitFestlegen;
 	private JLabel lblStandZeitInfo;
-	private JComboBox cmbStandZeitPause;
-	private JComboBox cmbStandZeitBisMIN;
-	private JComboBox cmbStandZeitBisH;
-	private JComboBox cmbStandZeitVonMIN;
-	private JComboBox cmbStandZeitVonH;
+	private JComboBox<String> cmbStandZeitPause;
+	private JComboBox<String> cmbStandZeitBisMIN;
+	private JComboBox<String> cmbStandZeitBisH;
+	private JComboBox<String> cmbStandZeitVonMIN;
+	private JComboBox<String> cmbStandZeitVonH;
 	private JLabel jLabel8;
 	private JLabel jLabel7;
 	private JLabel jLabel6;
 	private JButton btnPasswortAendern;
 	private JLabel lblPasswortAendernInfo;
-	private JTextField txtPasswortAendernNeuWdh;
-	private JTextField txtPasswortAendernNeu;
-	private JTextField txtPasswortAendernAlt;
+	private JPasswordField txtPasswortAendernNeuWdh;
+	private JPasswordField txtPasswortAendernNeu;
+	private JPasswordField txtPasswortAendernAlt;
 	private JLabel jLabel1;
 	private JPanel panelUserArbeitszeitFestlegen;
 	
@@ -108,17 +113,17 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 					jLabel5.setBounds(12, 143, 199, 21);
 				}
 				{
-					txtPasswortAendernAlt = new JTextField();
+					txtPasswortAendernAlt = new JPasswordField();
 					panelUserPasswortAendern.add(txtPasswortAendernAlt);
 					txtPasswortAendernAlt.setBounds(228, 49, 218, 28);
 				}
 				{
-					txtPasswortAendernNeu = new JTextField();
+					txtPasswortAendernNeu = new JPasswordField();
 					panelUserPasswortAendern.add(txtPasswortAendernNeu);
 					txtPasswortAendernNeu.setBounds(228, 92, 218, 28);
 				}
 				{
-					txtPasswortAendernNeuWdh = new JTextField();
+					txtPasswortAendernNeuWdh = new JPasswordField();
 					panelUserPasswortAendern.add(txtPasswortAendernNeuWdh);
 					txtPasswortAendernNeuWdh.setBounds(229, 140, 217, 28);
 				}
@@ -166,46 +171,36 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 					jLabel8.setBounds(12, 146, 43, 21);
 				}
 				{
-					ComboBoxModel cmbStandZeitVonHModel = 
-							new DefaultComboBoxModel(
-									new String[] { "09", "Item Two" });
-					cmbStandZeitVonH = new JComboBox();
+					ComboBoxModel<String> cmbStandZeitVonHModel = new TimeCBModel("hour");
+					cmbStandZeitVonH = new JComboBox<String>();
 					panelUserArbeitszeitFestlegen.add(cmbStandZeitVonH);
 					cmbStandZeitVonH.setModel(cmbStandZeitVonHModel);
 					cmbStandZeitVonH.setBounds(74, 48, 62, 28);
 				}
 				{
-					ComboBoxModel cmbStandZeitVonMINModel = 
-							new DefaultComboBoxModel(
-									new String[] { "30", "Item Two" });
-					cmbStandZeitVonMIN = new JComboBox();
+					ComboBoxModel<String> cmbStandZeitVonMINModel = new TimeCBModel("min");
+					cmbStandZeitVonMIN = new JComboBox<String>();
 					panelUserArbeitszeitFestlegen.add(cmbStandZeitVonMIN);
 					cmbStandZeitVonMIN.setModel(cmbStandZeitVonMINModel);
 					cmbStandZeitVonMIN.setBounds(156, 48, 61, 28);
 				}
 				{
-					ComboBoxModel cmbStandZeitBisHModel = 
-							new DefaultComboBoxModel(
-									new String[] { "18", "Item Two" });
-					cmbStandZeitBisH = new JComboBox();
+					ComboBoxModel<String> cmbStandZeitBisHModel = new TimeCBModel("hour");
+					cmbStandZeitBisH = new JComboBox<String>();
 					panelUserArbeitszeitFestlegen.add(cmbStandZeitBisH);
 					cmbStandZeitBisH.setModel(cmbStandZeitBisHModel);
 					cmbStandZeitBisH.setBounds(74, 94, 62, 28);
 				}
 				{
-					ComboBoxModel cmbStandZeitBisMINModel = 
-							new DefaultComboBoxModel(
-									new String[] { "00", "Item Two" });
-					cmbStandZeitBisMIN = new JComboBox();
+					ComboBoxModel<String> cmbStandZeitBisMINModel = new TimeCBModel("min");
+					cmbStandZeitBisMIN = new JComboBox<String>();
 					panelUserArbeitszeitFestlegen.add(cmbStandZeitBisMIN);
 					cmbStandZeitBisMIN.setModel(cmbStandZeitBisMINModel);
 					cmbStandZeitBisMIN.setBounds(156, 94, 61, 28);
 				}
 				{
-					ComboBoxModel cmbStandZeitPauseModel = 
-							new DefaultComboBoxModel(
-									new String[] { "30", "Item Two" });
-					cmbStandZeitPause = new JComboBox();
+					ComboBoxModel<String> cmbStandZeitPauseModel = new TimeCBModel("pause");
+					cmbStandZeitPause = new JComboBox<String>();
 					panelUserArbeitszeitFestlegen.add(cmbStandZeitPause);
 					cmbStandZeitPause.setModel(cmbStandZeitPauseModel);
 					cmbStandZeitPause.setBounds(73, 142, 63, 28);
@@ -231,10 +226,24 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnPasswortAendern) {
-			
+			checkPasswords();
 		}
 		if(e.getSource() == this.btnStandZeitFestlegen) {
 			
+		}
+	}
+
+	private void checkPasswords() {
+		try {
+			this.database.checkPasswordCorrect(new String(this.txtPasswortAendernAlt.getPassword()));
+			if(this.txtPasswortAendernNeu.getPassword().equals(this.txtPasswortAendernNeuWdh.getPassword()))
+				this.database.resetPassword(this.loggedInUser.getId(), new String(this.txtPasswortAendernNeu.getPassword()));
+			else
+				this.lblPasswortAendernInfo.setText("Neues Passwort stimmt nich überein");
+		} catch (SQLException e) {
+			this.lblPasswortAendernInfo.setText("Error Connecting to Database");
+		} catch (WrongPasswordException e) {
+			this.lblPasswortAendernInfo.setText("Altes Passwort falsch");
 		}
 	}
 

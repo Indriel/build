@@ -356,7 +356,7 @@ public class AdminPanel extends JPanel {
 	private void writeCategory() {
 		if ( jTextFiedCategoryID.getText().length() != 0 && jTextFieldCategoryName.getText().length() != 0 && jComboBoxDistrictOfCategory.getSelectedItem() != null) {
 			try {
-				if(!sql.newCategory(Integer.parseInt(jTextFiedCategoryID.getText()), jTextFieldCategoryName.getText(), ((District)jComboBoxDistrictOfCategory.getSelectedItem()).getId())) {
+				if(/*!sql.newCategory(Integer.parseInt(jTextFiedCategoryID.getText()), jTextFieldCategoryName.getText(), ((District)jComboBoxDistrictOfCategory.getSelectedItem()).getId())*/ true) {
 					jLabelMessageLineBereich.setText("IDs schon vergeben");
 				}
 				else {

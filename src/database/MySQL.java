@@ -929,4 +929,20 @@ public class MySQL {
 			e.printStackTrace();
 		}
 	}
+
+	public boolean checkPasswordCorrect(String string) throws SQLException, WrongPasswordException {
+		boolean retValue = false;
+		String stm = "select count(*) from mitarbeiter where pwd = ?";
+		this.connect();
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setString(1, string);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		if(rs.getInt(1) == 0) {
+			throw new WrongPasswordException("Old Password wrong");
+		}
+		else 
+			retValue = true;
+		return retValue;
+	}
 }

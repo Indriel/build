@@ -600,8 +600,8 @@ public class InputPanel extends JPanel {
 				}
 			}
 			
-			boolean success = 
-			sql.writeEmployeeDay(
+			boolean success = true;
+			/*sql.writeEmployeeDay(
 				userID,
 				date,
 				fromMinute,
@@ -610,7 +610,7 @@ public class InputPanel extends JPanel {
 				toHour,
 				pause,
 				((WorkType)modelWorkmode.getSelectedItem()).getId()
-			);	
+			);	*/
 			
 			if(!success) {
 				jLabelMessageLine.setText("Eintrag für " + df.format( date ) + " erfolgreich überschrieben!");
@@ -618,7 +618,7 @@ public class InputPanel extends JPanel {
 				sql.resetWorkDay(userID, date);
 				sql.deleteWorkDay(userID, date);
 				
-				sql.writeEmployeeDay(
+				/*sql.writeEmployeeDay(
 						userID,
 						date,
 						fromMinute,
@@ -627,7 +627,7 @@ public class InputPanel extends JPanel {
 						toHour,
 						pause,
 						((WorkType)modelWorkmode.getSelectedItem()).getId()
-					);	
+					);	*/
 			}
 			
 			else 
