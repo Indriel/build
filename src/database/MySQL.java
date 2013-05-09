@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -229,111 +230,53 @@ public class MySQL {
 		return tmp;
 	}*/
 
-	public boolean writeEmployeeDay(int m_id, Date datum, int fromMinute,
-			int fromHour, int toMinute, int toHour, int pause, int t_id) {
+	public void writeEmployeeActivity(
+			int m_id,
+			Date datum,
+			int[] k_id,
+			Time[] dauerVon,
+			Time[] dauerBis,
+			String[] text) {
 
+		int activityCount = k_id.length;
+
+		SimpleDateFormat df;
 		String tagesdatum;
 		String monat;
-		String von;
-		String bis;
-		SimpleDateFormat df;
-		float pauseStunden = pause;
-		int sollstd;
-		float ueberstunden;
 
-		df = new SimpleDateFormat("yyyy-MM-dd");
-		df.setTimeZone(TimeZone.getDefault());
+		df = new SimpleDateFormat( "yyyy-MM-dd" );
+		df.setTimeZone( TimeZone.getDefault() );
 		tagesdatum = df.format(datum);
 
 		df = new SimpleDateFormat("yyyy-MM");
 		monat = df.format(datum);
 
-		try {
-			ResultSet rs = stmt
-					.executeQuery("select sollstd_tag from glob_tab");
-			rs.next();
-			sollstd = rs.getInt("sollstd_tag");
-		} catch (Exception e) {
-			System.out.println("Fatal error: sollstd_tag not available! "
-					+ e.getMessage());
-			return false;
-		}
+		for(int i = 0; i< activityCount; i++) {
 
-		if (t_id == 1) {
-			von = tagesdatum + " " + fromHour + ":" + fromMinute + ":00";
-			bis = tagesdatum + " " + toHour + ":" + toMinute + ":00";
+			PreparedStatement insertStmt;
+			String insertString = "INSERT INTO mitarb_taetigkt VALUES (?, ?, ?, ?, ?, ?,?)";
 
-			pauseStunden /= 60;
+			//float dauerStunden = dauer[i];
+			//dauerStunden /= 60;
 
-			ueberstunden = (float) (((toHour * 60 + toMinute) / 60.0
-					- (fromHour * 60 + fromMinute) / 60.0 - pauseStunden) - sollstd);
-		}
+			try {
+		        insertStmt = con.prepareStatement(insertString);
 
-		else if (t_id == 3 || t_id == 4 || t_id == 5) {
-			von = "1111-11-11 00:00:00";
-			bis = "1111-11-11 00:00:00";
-			pauseStunden = 0;
-			pauseStunden /= 60;
-			ueberstunden = 0;
-		}
+		        insertStmt.setInt(1, m_id);
+		        insertStmt.setString(2, monat + "-01");
+		        insertStmt.setString(3, tagesdatum);
+		        insertStmt.setTime(4, dauerVon[i]);
+		        insertStmt.setTime(5, dauerBis[i]);
+		        insertStmt.setInt(6, k_id[i]);
+		        insertStmt.setString(7, text[i]);
+		        insertStmt.execute();
 
-		else {
-			von = "1111-11-11 00:00:00";
-			bis = "1111-11-11 00:00:00";
-			pauseStunden = 0;
-			pauseStunden /= 60;
-			ueberstunden = -sollstd;
-		}
-
-		PreparedStatement insertStmt;
-		String insertString = "INSERT INTO mitarb_tag VALUES (?, ?, ?, ?, ?, ?, ?, ? )";
-
-		try {
-			insertStmt = con.prepareStatement(insertString);
-
-			insertStmt.setInt(1, m_id);
-			insertStmt.setString(2, monat + "-01");
-			insertStmt.setString(3, tagesdatum);
-			insertStmt.setString(4, von);
-			insertStmt.setString(5, bis);
-			insertStmt.setFloat(6, pauseStunden);
-			insertStmt.setFloat(7, ueberstunden);
-			insertStmt.setInt(8, t_id);
-			insertStmt.execute();
-		} catch (SQLException sqle) {
-			System.out.println(sqle.getMessage());
-			return false;
-		}
-
-		try {
-			ResultSet rs = stmt
-					.executeQuery("select count(*) from mitarb_monat where id="
-							+ m_id + " and datum ='" + monat + "-01'");
-			rs.next();
-			if (rs.getInt(1) != 0) {
-				ResultSet rs1 = stmt
-						.executeQuery("select uebertrag from mitarb_monat where id="
-								+ m_id + " and datum ='" + monat + "-01'");
-				rs1.next();
-				BigDecimal bd = rs1.getBigDecimal("uebertrag");
-				float uebertrag = bd.floatValue();
-				uebertrag = uebertrag + ueberstunden;
-
-				stmt.execute("update mitarb_monat set uebertrag = " + uebertrag
-						+ " where id=" + m_id + " and datum ='" + monat
-						+ "-01'");
 			}
-
-			else {
-				stmt.execute("insert into mitarb_monat values('" + monat
-						+ "-01', " + m_id + "," + ueberstunden + ")");
+			catch(SQLException sqle) {
+				System.out.println("2"+sqle.getMessage());
 			}
-
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		return true;
+
 	}
 
 	public void writeEmployeeActivity(int m_id, Date datum, int[] k_id,
@@ -806,7 +749,7 @@ public class MySQL {
 		return false;
 	}
 
-	public boolean newCategory(int category_id, String name, int district_id) {
+	/*public boolean newCategory(int category_id, String name, int district_id) {
 		try {
 			ResultSet rs = stmt
 					.executeQuery("select * from kategorie where id = "
@@ -829,7 +772,7 @@ public class MySQL {
 							+ e.getMessage());
 		}
 		return false;
-	}
+	}*/
 
 	public void updateComboBoxUser(DefaultComboBoxModel<User> dcbm) throws SQLException {
 		dcbm.removeAllElements();
@@ -966,26 +909,21 @@ public class MySQL {
 		String monat;
 		String tagesdatum;
 		SimpleDateFormat df;
-		df = new SimpleDateFormat("yyyy-MM-dd");
-		df.setTimeZone(TimeZone.getDefault());
+		df = new SimpleDateFormat( "yyyy-MM-dd" );
+		df.setTimeZone( TimeZone.getDefault() );
 		tagesdatum = df.format(date);
 
 		try {
-			ResultSet rs = stmt
-					.executeQuery("select ueberstunden from mitarb_tag where id = "
-							+ m_id + " and tagesdatum = '" + tagesdatum + "'");
+			ResultSet rs = stmt.executeQuery("select ueberstunden from mitarb_tag where id = " + m_id + " and tagesdatum = '"+ tagesdatum + "'");
 			rs.next();
-
-			BigDecimal bd = rs.getBigDecimal("ueberstunden");
+			/*BigDecimal bd = rs.getBigDecimal("ueberstunden");
 			float ueberstunden = bd.floatValue();
 
 			df = new SimpleDateFormat("yyyy-MM");
 			monat = df.format(date);
 
-			stmt.execute("update mitarb_monat set uebertrag = (uebertrag - "
-					+ ueberstunden + ") where id=" + m_id + " and datum ='"
-					+ monat + "-01'");
-
+			stmt.execute("update mitarb_monat set uebertrag = (uebertrag - " + ueberstunden + ") where id=" + m_id + " and datum ='" + monat + "-01'");
+*/
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
