@@ -15,7 +15,7 @@ public class MitarbeiterTag {
 	private int pause;
 	private int ueberstunden;
 	private int sollstunden;
-	
+	//------------------------------------------------------
 	public MitarbeiterTag(int m_id, Date mondate, Date tDate, int tid, Time von, Time bis, int pause, int sollstd) {
 		this.mitarbeiter_id = m_id;
 		this.monatsdatum = mondate;

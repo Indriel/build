@@ -6,7 +6,7 @@ public class MitarbeiterMonat {
 	private Date datum;
 	private int id;
 	private float uebertrag;
-	
+	//-----------------------------------------------------------
 	public MitarbeiterMonat(int id, Date datum, float uebertrag) {
 		this.datum = datum;
 		this.id = id;
