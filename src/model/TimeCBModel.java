@@ -19,6 +19,17 @@ public class TimeCBModel extends DefaultComboBoxModel<String>{
 		else if(type.equals("pause")) {
 			this.initPause();
 		}
+		else if(type.equals("sollstd")) {
+			this.initSollStd();
+		}
+		else
+			this.initHour();
+	}
+
+	private void initSollStd() {
+		String[] s = new String[]{"06","07","08","09","10","11","12"};
+		for(int i = 0; i<s.length; i++)
+			this.addElement(s[i]);
 	}
 
 	private void initPause() {

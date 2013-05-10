@@ -21,7 +21,6 @@ public class Month {
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
 		String part[] = name.split("-");
 		return part[0] + "-" + part[1];
 	}

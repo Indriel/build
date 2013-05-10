@@ -83,7 +83,7 @@ public class AdminPanel extends javax.swing.JPanel {
 					tpaneAdmin_panelZeiten.setLayout(tpaneAdmin_panelZeitenLayout);
 					tpaneAdmin.addTab("Zeiten", tpaneAdmin_panelZeiten);
 					{
-						tpaneAdmin_panelZeiten_ZeitenSettings = new AdminZeitenPanel();
+						tpaneAdmin_panelZeiten_ZeitenSettings = new AdminZeitenPanel(this.loggedInUser);
 						tpaneAdmin_panelZeiten_ZeitenSettings.setVisible(true);
 						tpaneAdmin_panelZeiten.add(tpaneAdmin_panelZeiten_ZeitenSettings);
 					}

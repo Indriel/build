@@ -215,11 +215,11 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 		return lblFormat;
 	}
 
-	private JComboBox getCbFormat() {
+	private JComboBox<String> getCbFormat() {
 		if (cbFormat == null) {
-			ComboBoxModel cbFormatModel = new DefaultComboBoxModel(
-					new String[] { "csv", "Item Two" });
-			cbFormat = new JComboBox();
+			ComboBoxModel<String> cbFormatModel = new DefaultComboBoxModel<String>(
+					new String[] {"CSV", "HTML", "PDF"});
+			cbFormat = new JComboBox<String>();
 			cbFormat.setModel(cbFormatModel);
 			if(!this.loggedUser.getName().equals("admin"))
 				cbFormat.setVisible(false);

@@ -9,7 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TimeZone;
@@ -20,6 +22,8 @@ import javax.swing.DefaultComboBoxModel;
 import data.Category;
 import data.DayOfWeek;
 import data.District;
+import data.MitarbeiterMonat;
+import data.MitarbeiterTag;
 import data.Month;
 import data.User;
 import data.WorkType;
@@ -620,7 +624,7 @@ public class MySQL {
 				line.add(partEndTime[0] + ":" + partEndTime[1]);
 
 				// Pause
-				BigDecimal bd = rs.getBigDecimal("pause");
+				BigDecimal bd = rs.getBigDecimal("pause");						///WTF WTF WTF WTF, Seriously
 				float f = bd.floatValue();
 				f *= 60;
 				int pauseMin = (int) f;
@@ -955,5 +959,66 @@ public class MySQL {
 		pps.setInt(3, pause);
 		pps.setInt(4, u.getId());
 		return pps.executeUpdate();
+	}
+
+	public int setNewSollStd(User loggedInUser, java.util.Date changeDate, int newSollStd) throws SQLException {
+		this.connect();
+		String stm = "insert into m_sollstunden(m_id, sollst_tag, datum) values(?,?,?)";
+		java.sql.Date sdate = new java.sql.Date(changeDate.getTime());
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1,loggedInUser.getId());
+		pps.setDate(3, sdate);
+		pps.setInt(2, newSollStd);
+		return pps.executeUpdate();
+	}
+	
+	public Vector<MitarbeiterMonat> getMitarbeiterMonatForAuswertung(User user, Date von, Date bis) throws SQLException {
+		Calendar createNewDate = GregorianCalendar.getInstance();
+		Calendar handleInputs = GregorianCalendar.getInstance();
+		java.sql.Date vons;
+		java.sql.Date biss;
+		Vector<MitarbeiterMonat> retValue = new Vector<MitarbeiterMonat>();
+		//---------------
+		handleInputs.setTime(von);
+		createNewDate.set(handleInputs.get(Calendar.YEAR), handleInputs.get(Calendar.MONTH), 1);
+		vons = new java.sql.Date(createNewDate.getTimeInMillis());
+		handleInputs.setTime(bis);
+		createNewDate.set(handleInputs.get(Calendar.YEAR), handleInputs.get(Calendar.MONTH), 1);
+		biss = new java.sql.Date(createNewDate.getTimeInMillis());
+		this.connect();
+		String stm = "select * from mitarb_monat where id = ? and datum between ? and ?";
+		//-----------------------
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, user.getId());
+		pps.setDate(2, vons);
+		pps.setDate(3, biss);
+		ResultSet rs = pps.executeQuery();
+		while(rs.next()) {
+			retValue.add(new MitarbeiterMonat(rs.getInt(2), rs.getDate(1), rs.getFloat(3)));
+		}
+		return retValue;
+	}
+	
+	public Vector<MitarbeiterTag> getMitarbeiterTagForAuswertung(User user, Date monatsdatum) throws SQLException {
+		this.connect();
+		Vector<MitarbeiterTag> retValue = new Vector<MitarbeiterTag>();
+		java.sql.Date monatsds = new java.sql.Date(monatsdatum.getTime());
+		String stm = "select * from mitarb_tag where id = ? and datum = ?";
+		String stmsollstd = "select sollst_tag from m_sollstunden where id = ? and datum <= ? order by datum desc";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		PreparedStatement pps2;
+		pps.setInt(1, user.getId());
+		pps.setDate(2, monatsds);
+		ResultSet rs = pps.executeQuery();
+		ResultSet rs2;
+		while(rs.next()) {
+			pps2 = this.con.prepareStatement(stmsollstd);
+			pps2.setInt(1, user.getId());
+			pps2.setDate(2, rs.getDate("tagesdatum"));
+			rs2 = pps2.executeQuery();
+			rs2.next();
+			retValue.add(new MitarbeiterTag(rs.getInt("id"), rs.getDate("datum"), rs.getDate("tagesdatum"), rs.getInt("t_id"), rs.getTime("von"), rs.getTime("bis"), rs.getInt("pause"), rs2.getInt("sollst_tag")));
+		}
+		return retValue;
 	}
 }

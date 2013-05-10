@@ -1,8 +1,9 @@
 package gui_new;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -10,14 +11,16 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-
-import javax.swing.WindowConstants;
-import javax.swing.border.BevelBorder;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.BevelBorder;
+
+import model.TimeCBModel;
 
 import com.toedter.calendar.JDateChooser;
+
+import data.User;
+import database.MySQL;
 
 /**
 * This code was edited or generated using CloudGarden's Jigloo
@@ -32,6 +35,10 @@ import com.toedter.calendar.JDateChooser;
 * LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
 */
 public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListener{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPanel panelZeitenStandard;
 	private JPanel panelSSollstunden;
 	private JPanel panelSpezSollstunden;
@@ -40,9 +47,9 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 	private JLabel jLabel4;
 	private JLabel jLabel5;
 	private JLabel lblSpezSollstundenNeu;
-	private JComboBox cmbSpezSollstundenNeu;
+	private JComboBox<String> cmbSpezSollstundenNeu;
 	private JLabel jLabel9;
-	private JComboBox cmbSpezSollstundenUser;
+	private JComboBox<User> cmbSpezSollstundenUser;
 	private JLabel jLabel11;
 	private JLabel jLabel10;
 	private JButton btnSpezSollstundenFestlegen;
@@ -50,26 +57,31 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 	private JLabel lblSSollstunden;
 	private JButton btnSSollstundenFestlegen;
 	private JButton btnStandardzeitFestlegen;
-	private JComboBox cmbSSollstundenNeu;
+	private JComboBox<String> cmbSSollstundenNeu;
 	private JLabel jLabel7;
-	private JComboBox cmbStandardzeitPause;
-	private JComboBox cmbStandardzeitBisMIN;
-	private JComboBox cmbStandardzeitBisH;
-	private JComboBox cmbStandardzeitVonMIN;
-	private JComboBox cmbStandardzeitVonH;
+	private JComboBox<String> cmbStandardzeitPause;
+	private JComboBox<String> cmbStandardzeitBisMIN;
+	private JComboBox<String> cmbStandardzeitBisH;
+	private JComboBox<String> cmbStandardzeitVonMIN;
+	private JComboBox<String> cmbStandardzeitVonH;
 	private JLabel lblStandardzeitInfo;
 	private JLabel jLabel6;
 	private JLabel jLabel1;
 	private JDateChooser choseAenderungszeit;
 	private JDateChooser choseAenderungszeitNonSpez;
+	
+	private MySQL database;
+	private User loggedInUser;
 
 	/**
 	* Auto-generated main method to display this 
 	* JPanel inside a new JFrame.
 	*/
 		
-	public AdminZeitenPanel() {
+	public AdminZeitenPanel(User liu) {
 		super();
+		this.database = MySQL.getInstance();
+		this.loggedInUser = liu;
 		initGUI();
 	}
 	
@@ -110,50 +122,40 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 				{
 					lblStandardzeitInfo = new JLabel();
 					panelZeitenStandard.add(lblStandardzeitInfo);
-					lblStandardzeitInfo.setBounds(12, 151, 621, 10);
+					lblStandardzeitInfo.setBounds(12, 151, 621, 22);
 					lblStandardzeitInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
-					ComboBoxModel cmbStandardzeitVonHModel = 
-							new DefaultComboBoxModel(
-									new String[] { "10", "Item Two" });
-					cmbStandardzeitVonH = new JComboBox();
+					ComboBoxModel<String> cmbStandardzeitVonHModel = new TimeCBModel("hour");
+					cmbStandardzeitVonH = new JComboBox<String>();
 					panelZeitenStandard.add(cmbStandardzeitVonH);
 					cmbStandardzeitVonH.setModel(cmbStandardzeitVonHModel);
 					cmbStandardzeitVonH.setBounds(59, 41, 60, 28);
 				}
 				{
-					ComboBoxModel cmbStandardzeitVonMINModel = 
-							new DefaultComboBoxModel(
-									new String[] { "00", "Item Two" });
-					cmbStandardzeitVonMIN = new JComboBox();
+					ComboBoxModel<String> cmbStandardzeitVonMINModel = new TimeCBModel("min");
+					cmbStandardzeitVonMIN = new JComboBox<String>();
 					panelZeitenStandard.add(cmbStandardzeitVonMIN);
 					cmbStandardzeitVonMIN.setModel(cmbStandardzeitVonMINModel);
 					cmbStandardzeitVonMIN.setBounds(131, 41, 57, 28);
 				}
 				{
-					ComboBoxModel cmbStandardzeitBisHModel = 
-							new DefaultComboBoxModel(
-									new String[] { "18", "Item Two" });
-					cmbStandardzeitBisH = new JComboBox();
+					ComboBoxModel<String> cmbStandardzeitBisHModel = new TimeCBModel("hour");
+					cmbStandardzeitBisH = new JComboBox<String>();
 					panelZeitenStandard.add(cmbStandardzeitBisH);
 					cmbStandardzeitBisH.setModel(cmbStandardzeitBisHModel);
 					cmbStandardzeitBisH.setBounds(59, 75, 60, 28);
 				}
 				{
-					ComboBoxModel cmbStandardzeitBisMINModel = 
-							new DefaultComboBoxModel(
-									new String[] { "30", "Item Two" });
-					cmbStandardzeitBisMIN = new JComboBox();
+					ComboBoxModel<String> cmbStandardzeitBisMINModel = new TimeCBModel("min");
+					cmbStandardzeitBisMIN = new JComboBox<String>();
 					panelZeitenStandard.add(cmbStandardzeitBisMIN);
 					cmbStandardzeitBisMIN.setModel(cmbStandardzeitBisMINModel);
 					cmbStandardzeitBisMIN.setBounds(131, 75, 57, 28);
 				}
 				{
-					ComboBoxModel cmbStandardzeitPauseModel = 
-							new DefaultComboBoxModel(
-									new String[] { "30", "Item Two" });
-					cmbStandardzeitPause = new JComboBox();
+					ComboBoxModel<String> cmbStandardzeitPauseModel = new TimeCBModel("pause");
+					cmbStandardzeitPause = new JComboBox<String>();
 					panelZeitenStandard.add(cmbStandardzeitPause);
 					cmbStandardzeitPause.setModel(cmbStandardzeitPauseModel);
 					cmbStandardzeitPause.setBounds(59, 109, 60, 28);
@@ -184,10 +186,8 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					jLabel7.setBounds(12, 57, 119, 21);
 				}
 				{
-					ComboBoxModel cmbSSollstundenNeuModel = 
-							new DefaultComboBoxModel(
-									new String[] { "09", "Item Two" });
-					cmbSSollstundenNeu = new JComboBox();
+					ComboBoxModel<String> cmbSSollstundenNeuModel = new TimeCBModel("sollstd");
+					cmbSSollstundenNeu = new JComboBox<String>();
 					panelSSollstunden.add(cmbSSollstundenNeu);
 					cmbSSollstundenNeu.setModel(cmbSSollstundenNeuModel);
 					cmbSSollstundenNeu.setBounds(149, 57, 69, 28);
@@ -201,7 +201,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 				{
 					lblSSollstunden = new JLabel();
 					panelSSollstunden.add(lblSSollstunden);
-					lblSSollstunden.setBounds(12, 164, 621, 10);
+					lblSSollstunden.setBounds(12, 164, 621, 20);
 					lblSSollstunden.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
@@ -235,10 +235,8 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					jLabel8.setBounds(12, 45, 70, 21);
 				}
 				{
-					ComboBoxModel cmbSpezSollstundenUserModel = 
-							new DefaultComboBoxModel(
-									new String[] { "Angestellter 1", "Item Two" });
-					cmbSpezSollstundenUser = new JComboBox();
+					ComboBoxModel<User> cmbSpezSollstundenUserModel = new DefaultComboBoxModel<User>(this.database.getUsers());
+					cmbSpezSollstundenUser = new JComboBox<User>();
 					panelSpezSollstunden.add(cmbSpezSollstundenUser);
 					cmbSpezSollstundenUser.setModel(cmbSpezSollstundenUserModel);
 					cmbSpezSollstundenUser.setBounds(145, 41, 128, 28);
@@ -250,10 +248,8 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					jLabel9.setBounds(12, 84, 108, 21);
 				}
 				{
-					ComboBoxModel cmbSpezSollstundenNeuModel = 
-							new DefaultComboBoxModel(
-									new String[] { "09", "Item Two" });
-					cmbSpezSollstundenNeu = new JComboBox();
+					ComboBoxModel<String> cmbSpezSollstundenNeuModel = new TimeCBModel("sollstd");
+					cmbSpezSollstundenNeu = new JComboBox<String>();
 					panelSpezSollstunden.add(cmbSpezSollstundenNeu);
 					cmbSpezSollstundenNeu.setModel(cmbSpezSollstundenNeuModel);
 					cmbSpezSollstundenNeu.setBounds(145, 80, 69, 28);
@@ -261,7 +257,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 				{
 					lblSpezSollstundenNeu = new JLabel();
 					panelSpezSollstunden.add(lblSpezSollstundenNeu);
-					lblSpezSollstundenNeu.setBounds(12, 164, 621, 10);
+					lblSpezSollstundenNeu.setBounds(12, 164, 621, 20);
 					lblSpezSollstundenNeu.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
@@ -269,6 +265,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					panelSpezSollstunden.add(btnSpezSollstundenFestlegen);
 					btnSpezSollstundenFestlegen.setText("Festlegen");
 					btnSpezSollstundenFestlegen.setBounds(273, 77, 96, 28);
+					btnSpezSollstundenFestlegen.addActionListener(this);
 				}
 				{
 					choseAenderungszeit = new JDateChooser();
@@ -290,7 +287,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnSpezSollstundenFestlegen) {
-			
+			this.setUserSpecificSollStd();
 		}
 		
 		else if(e.getSource() == this.btnSSollstundenFestlegen) {
@@ -299,6 +296,17 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 		
 		else if(e.getSource() == this.btnStandardzeitFestlegen) {
 			
+		}
+	}
+
+	private void setUserSpecificSollStd() {
+		int newSollStd = Integer.parseInt((String) this.cmbSpezSollstundenNeu.getSelectedItem());
+		Date changeDate = this.choseAenderungszeit.getDate();
+		try {
+			this.database.setNewSollStd(this.loggedInUser, changeDate, newSollStd);
+			this.lblSpezSollstundenNeu.setText("Update der Sollstunden erfolgreich");
+		} catch (SQLException e) {
+			this.lblSpezSollstundenNeu.setText("Fehler bei der Verbindung zur Datenbank: " + e.getMessage());
 		}
 	}
 
