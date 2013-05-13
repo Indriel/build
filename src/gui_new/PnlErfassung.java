@@ -213,7 +213,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 			mainDateChooser
 					.addPropertyChangeListener(new PropertyChangeListener() {
 						public void propertyChange(PropertyChangeEvent arg0) {
-							// checkIfEntryAlreadyExists();
+							 checkIfEntryAlreadyExists();
 						}
 					});
 			mainDateChooser.setPreferredSize(new Dimension(150, 20));
@@ -221,7 +221,37 @@ public class PnlErfassung extends javax.swing.JPanel {
 		}
 		return mainDateChooser;
 	}
-
+	private void checkIfEntryAlreadyExists() {
+		Vector<Vector<String>> values;
+		
+		int userID = 0;
+		Date date;
+		if(cbUserAdmin != null) {
+			try {
+			userID = ( (User)cbUserAdmin .getSelectedItem()).getId();
+			}
+			catch(NullPointerException npe) { return; }
+		}
+		else return;
+		SimpleDateFormat df;
+		
+		if(mainDateChooser.getDate() != null) {
+			date = mainDateChooser.getDate();
+		}	
+		
+		else return;
+		
+		if(sql.entryAlreadyExists(userID, date)) {
+			values = sql.getActivities(userID, date);
+			if(itm != null) 
+				itm.setLines(values);
+		}
+		
+		else {
+			if(itm != null)
+				itm.reset();
+		}
+	}
 	private JLabel getLblArt() {
 		if (lblArt == null) {
 			lblArt = new JLabel();
@@ -483,10 +513,9 @@ public class PnlErfassung extends javax.swing.JPanel {
 			lblMessage.setText("");
 			// System.out.println(df.format( dt ));
 		}
-
 		else {
 			lblMessage
-					.setText("Bitte Ã¼berprÃ¼fen Sie das Datumsformat! (tt.mm.yyyy)");
+					.setText("Bitte überprüfen Sie das Datumsformat! (tt.mm.yyyy)");
 			correctInput = false;
 			return;
 		}
@@ -501,7 +530,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 				&& modelWorkmode.getSelectedItem().toString()
 						.compareTo("Arbeitstag") == 0) {
 			lblMessage
-					.setText("Bitte Ã¼berprÃ¼fen Sie die Angabe der Tageszeiten!");
+					.setText("Bitte überprüfen Sie die Angabe der Tageszeiten!");
 			correctInput = false;
 			return;
 		}
@@ -517,7 +546,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 			lblMessage.setText("");
 		} catch (NumberFormatException nfe) {
 			lblMessage
-					.setText("Bitte geben Sie fÃ¼r die Dauer der Pause eine ganze Zahl ein!");
+					.setText("Bitte geben Sie für die Dauer der Pause eine ganze Zahl ein!");
 			correctInput = false;
 			return;
 		}
@@ -530,7 +559,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 					&& modelWorkmode.getSelectedItem().toString()
 							.compareTo("Arbeitstag") == 0) {
 				lblMessage
-						.setText("Es muss mindestens eine AktivitÃ¤t eingetragen werden!");
+						.setText("Es muss mindestens eine Aktivität eingetragen werden!");
 				return;
 			} else
 				lblMessage.setText("");
@@ -564,8 +593,9 @@ public class PnlErfassung extends javax.swing.JPanel {
 					((WorkType) modelWorkmode.getSelectedItem()).getId());
 
 			if (!success) {
-				lblMessage.setText("Eintrag fÃ¼r " + df.format(date)
-						+ " erfolgreich Ã¼berschrieben!");
+				if(checkEnteredTimes()){
+				lblMessage.setText("Eintrag für " + df.format(date)
+						+ " erfolgreich überschrieben!");
 
 				sql.resetWorkDay(userID, date);
 				sql.deleteWorkDay(userID, date);
@@ -573,23 +603,50 @@ public class PnlErfassung extends javax.swing.JPanel {
 				sql.writeEmployeeDay(userID, date, fromMinute, fromHour,
 						toMinute, toHour, pause,
 						((WorkType) modelWorkmode.getSelectedItem()).getId());
+				}else{
+					this.lblMessage.setText("Die Minuten der eingetragenen Tätigkeiten übersteigen die Arbeitszeit");
+				}
 			}
 
 			else
-				lblMessage.setText("Eintrag fÃ¼r " + df.format(date)
+				lblMessage.setText("Eintrag für " + df.format(date)
 						+ " erfolgreich!");
 
 			sql.deleteActivities(userID, date);
 
 			if (modelWorkmode.getSelectedItem().toString()
 					.compareTo("Arbeitstag") == 0) {
+				boolean checktime=checkEnteredTimes();
+				if(checktime){
 				sql.writeEmployeeActivity(userID, date, categoryId,
 						durationVon, text);
+				}else{
+					this.lblMessage.setText("Die Minuten der eingetragenen Tätigkeiten übersteigen die Arbeitszeit");
+				}
 			} else
 				itm.reset();
 
 		}
 
+	}
+
+	private boolean checkEnteredTimes() {
+		// TODO Auto-generated method stub
+		boolean ret=true;
+		int minute=0;
+		for(int i=0;i<itm.getRowCount();i++){
+			if(itm.getValueAt(i, 2).toString().compareTo("")!=0){
+			Time t1=new Time(Integer.parseInt(itm.getValueAt(i,2 ).toString().split(":")[0]),Integer.parseInt(itm.getValueAt(i, 2).toString().split(":")[1]),0);
+			minute=minute+(t1.getHours()*60)+t1.getMinutes();
+			}
+		}
+		Time t2=new Time(Integer.parseInt(cbHoursVon.getSelectedItem().toString()),Integer.parseInt(cbMinutesVon.getSelectedItem().toString()),0);
+		Time t3=new Time(Integer.parseInt(cbHoursBis.getSelectedItem().toString()),Integer.parseInt(cbMinutesBis.getSelectedItem().toString()),0);
+		int minutesdiff=((t3.getHours()*60)+(t3.getMinutes()))-((t2.getHours()*60)+(t3.getMinutes()));
+		minutesdiff -=Integer.parseInt(cbPause.getSelectedItem().toString().split(" ")[0]);
+		if(minutesdiff<minute)
+			ret=false;
+		return ret;
 	}
 
 	private JLabel getLblMessage() {

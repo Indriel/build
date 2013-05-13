@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.sql.SQLException;
 import java.util.Date;
 
 import javax.swing.ComboBoxModel;
@@ -15,6 +16,9 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.xml.parsers.ParserConfigurationException;
+
+import output.OutputGenerator;
 
 import com.toedter.calendar.JDateChooser;
 
@@ -77,7 +81,7 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 				lblAuswertung = new JLabel();
 				this.add(lblAuswertung);
 				lblAuswertung.setText("Auswertung:");
-				lblAuswertung.setBounds(12, 12, 172, 37);
+				lblAuswertung.setBounds(12, 12, 623, 37);
 				lblAuswertung.setFont(new java.awt.Font("Segoe UI", 0, 28));
 			}
 			{
@@ -232,6 +236,7 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 			btnGenerate = new JButton();
 			btnGenerate.setText("Generate");
 			btnGenerate.setBounds(250, 216, 155, 42);
+			btnGenerate.addActionListener(this);
 		}
 		return btnGenerate;
 	}
@@ -294,8 +299,16 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 	}
 
 	private void createResult(Date von, Date bis) {
-		// TODO Auto-generated method stub
-		
+		try {
+			this.lblMessage.setText("Doing Stuff");
+			OutputGenerator.generateOutputMitarbeiter(this.loggedUser, von, bis);
+			this.lblMessage.setText("Erledigt");
+		} catch (SQLException e) {
+			this.lblMessage.setText("Fehler beid Database Connection: " + e.getMessage());
+			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

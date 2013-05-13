@@ -302,8 +302,9 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 	private void setUserSpecificSollStd() {
 		int newSollStd = Integer.parseInt((String) this.cmbSpezSollstundenNeu.getSelectedItem());
 		Date changeDate = this.choseAenderungszeit.getDate();
+		User changeUser = (User) this.cmbSpezSollstundenUser.getSelectedItem();
 		try {
-			this.database.setNewSollStd(this.loggedInUser, changeDate, newSollStd);
+			this.database.setNewSollStd(changeUser, changeDate, newSollStd);
 			this.lblSpezSollstundenNeu.setText("Update der Sollstunden erfolgreich");
 		} catch (SQLException e) {
 			this.lblSpezSollstundenNeu.setText("Fehler bei der Verbindung zur Datenbank: " + e.getMessage());

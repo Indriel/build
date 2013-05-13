@@ -10,22 +10,56 @@ public class MitarbeiterTag {
 	private Date monatsdatum;
 	private Date tagesdatum;
 	private int taetigkeits_id;
-	private Date von;
-	private Date bis;
-	private int pause;
-	private int ueberstunden;
+	private Time von;
+	private Time bis;
+	private Time pause;
+	private Time ueberstunden;
+	private Time arbeitsstunden;
 	private int sollstunden;
+	private float floatUeberstunden;
 	//------------------------------------------------------
-	public MitarbeiterTag(int m_id, Date mondate, Date tDate, int tid, Time von, Time bis, int pause, int sollstd) {
+	public MitarbeiterTag(int m_id, Date mondate, Date tDate, int tid, Time von, Time bis, int pause, int sollstd, float ueber) {
 		this.mitarbeiter_id = m_id;
 		this.monatsdatum = mondate;
 		this.tagesdatum = tDate;
 		this.taetigkeits_id = tid;
-		this.von = new Date(von.getTime());
-		this.bis = new Date(von.getTime());
-		this.pause = pause;
+		this.von = this.calculateVon(von);
+		this.bis = this.calculateBis(bis);
+		this.pause = this.calculatePause(pause);
 		this.sollstunden = sollstd;
+		this.arbeitsstunden = this.calculateArbeitsstunden();
 		this.ueberstunden = this.calculateUeberstunden();
+		this.setFloatUeberstunden(ueber);
+	}
+
+	private Time calculateBis(Time bis2) {
+		Calendar c = new GregorianCalendar();
+		//c.set(Calendar.MINUTE, von2.getMinutes());
+		c.setTime(this.tagesdatum);
+		c.set(Calendar.HOUR_OF_DAY, bis2.getHours());
+		c.set(Calendar.MINUTE, bis2.getMinutes());
+		c.set(Calendar.SECOND, bis2.getSeconds());
+		return new Time(c.getTimeInMillis());
+	}
+
+	private Time calculateVon(Time von2) {
+		Calendar c = new GregorianCalendar();
+		//c.set(Calendar.MINUTE, von2.getMinutes());
+		c.setTime(this.tagesdatum);
+		c.set(Calendar.HOUR_OF_DAY, von2.getHours());
+		c.set(Calendar.MINUTE, von2.getMinutes());
+		c.set(Calendar.SECOND, von2.getSeconds());
+		return new Time(c.getTimeInMillis());
+	}
+
+	private Time calculatePause(int pause2) {
+		Calendar c = new GregorianCalendar();
+		c.set(Calendar.MINUTE, pause2);
+		c.setTime(this.tagesdatum);
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, pause2);
+		c.set(Calendar.SECOND, 0);
+		return new Time(c.getTimeInMillis());
 	}
 
 	public int getMitarbeiter_id() {
@@ -76,19 +110,19 @@ public class MitarbeiterTag {
 		this.bis = bis;
 	}
 
-	public int getPause() {
+	public Time getPause() {
 		return pause;
 	}
 
-	public void setPause(int pause) {
+	public void setPause(Time pause) {
 		this.pause = pause;
 	}
 
-	public int getUeberstunden() {
+	public Date getUeberstunden() {
 		return ueberstunden;
 	}
 
-	public void setUeberstunden(int ueberstunden) {
+	public void setUeberstunden(Time ueberstunden) {
 		this.ueberstunden = ueberstunden;
 	}
 
@@ -100,15 +134,42 @@ public class MitarbeiterTag {
 		this.sollstunden = sollstunden;
 	}
 	
-	private int calculateUeberstunden() {
+	private Time calculateUeberstunden() {
 		Calendar c = GregorianCalendar.getInstance();
-		c.setTime(bis);
-		int minbis = c.get(Calendar.MINUTE);
-		c.setTime(von);
-		int minvon = c.get(Calendar.MINUTE);
-		int retmin = minbis-minvon-pause;
-		c.set(Calendar.MINUTE, retmin);
-		return c.get(Calendar.HOUR_OF_DAY);
+		Calendar c2 = GregorianCalendar.getInstance();
+		c2.setTime(this.tagesdatum);
+		c2.set(Calendar.HOUR_OF_DAY, this.sollstunden);
+		c2.set(Calendar.MINUTE, 0);
+		c2.set(Calendar.SECOND, 0);
+		c.setTime(this.tagesdatum);
+		c.set(Calendar.HOUR_OF_DAY, -c2.get(Calendar.HOUR_OF_DAY) + this.arbeitsstunden.getHours());
+		c.set(Calendar.MINUTE, -c2.get(Calendar.MINUTE) + this.arbeitsstunden.getMinutes());
+		c.set(Calendar.SECOND, -c2.get(Calendar.SECOND) + this.arbeitsstunden.getSeconds());
+		return new Time(c.getTimeInMillis());
+	}
+	
+	private Time calculateArbeitsstunden() {
+		Calendar c = GregorianCalendar.getInstance();
+		c.setTime(this.tagesdatum);
+		c.set(Calendar.HOUR_OF_DAY, this.bis.getHours()-this.von.getHours()-this.pause.getHours());
+		c.set(Calendar.MINUTE, this.bis.getMinutes()-this.von.getMinutes()-this.pause.getMinutes());
+		c.set(Calendar.SECOND, this.bis.getSeconds()-this.von.getSeconds()-this.pause.getSeconds());
+		return new Time(c.getTimeInMillis());
 	}
 
+	public Date getArbeitsstunden() {
+		return arbeitsstunden;
+	}
+
+	public void setArbeitsstunden(Time arbeitsstunden) {
+		this.arbeitsstunden = arbeitsstunden;
+	}
+
+	public float getFloatUeberstunden() {
+		return floatUeberstunden;
+	}
+
+	public void setFloatUeberstunden(float floatUeberstunden) {
+		this.floatUeberstunden = floatUeberstunden;
+	}
 }

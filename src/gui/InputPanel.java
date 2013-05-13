@@ -636,12 +636,12 @@ public class InputPanel extends JPanel {
 			sql.deleteActivities(userID, date);
 			
 			if(modelWorkmode.getSelectedItem().toString().compareTo("Arbeitstag") == 0 ) {
-				sql.writeEmployeeActivity(
+				/*sql.writeEmployeeActivity(
 					userID,
 					date,
 					categoryId,
 					duration,
-					text);
+					text);*/
 			}
 			else
 				inputTableModel.reset();

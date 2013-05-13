@@ -217,74 +217,129 @@ public class MySQL {
 		return districts;
 	}
 
-	/*public Vector<User> getUsers() {
+	/*
+	 * public Vector<User> getUsers() {
+	 * 
+	 * Vector<User> tmp = new Vector<User>();
+	 * 
+	 * try { ResultSet rs = stmt.executeQuery("select * from mitarbeiter");
+	 * while (rs.next()) { tmp.add(new User(rs.getInt("id"),
+	 * rs.getString("name"))); }
+	 * 
+	 * } catch (Exception e) { System.out.println("Exception getUsers() " +
+	 * e.getMessage()); }
+	 * 
+	 * return tmp; }
+	 */
 
-		Vector<User> tmp = new Vector<User>();
-
-		try {
-			ResultSet rs = stmt.executeQuery("select * from mitarbeiter");
-			while (rs.next()) {
-				tmp.add(new User(rs.getInt("id"), rs.getString("name")));
-			}
-
-		} catch (Exception e) {
-			System.out.println("Exception getUsers() " + e.getMessage());
-		}
-
-		return tmp;
-	}*/
-
-	public void writeEmployeeActivity(
-			int m_id,
-			Date datum,
-			int[] k_id,
-			Time[] dauerVon,
-			Time[] dauerBis,
-			String[] text) {
-
-		int activityCount = k_id.length;
-
-		SimpleDateFormat df;
+	public boolean writeEmployeeDay(int m_id, Date datum, int fromMinute,
+			int fromHour, int toMinute, int toHour, int pause, int t_id) {
+		System.out.println(t_id);
 		String tagesdatum;
 		String monat;
+		String von;
+		String bis;
+		SimpleDateFormat df;
+		float pauseStunden = pause;
+		int sollstd;
+		float ueberstunden;
 
-		df = new SimpleDateFormat( "yyyy-MM-dd" );
-		df.setTimeZone( TimeZone.getDefault() );
+		df = new SimpleDateFormat("yyyy-MM-dd");
+		df.setTimeZone(TimeZone.getDefault());
 		tagesdatum = df.format(datum);
 
 		df = new SimpleDateFormat("yyyy-MM");
 		monat = df.format(datum);
 
-		for(int i = 0; i< activityCount; i++) {
-
-			PreparedStatement insertStmt;
-			String insertString = "INSERT INTO mitarb_taetigkt VALUES (?, ?, ?, ?, ?, ?,?)";
-
-			//float dauerStunden = dauer[i];
-			//dauerStunden /= 60;
-
-			try {
-		        insertStmt = con.prepareStatement(insertString);
-
-		        insertStmt.setInt(1, m_id);
-		        insertStmt.setString(2, monat + "-01");
-		        insertStmt.setString(3, tagesdatum);
-		        insertStmt.setTime(4, dauerVon[i]);
-		        insertStmt.setTime(5, dauerBis[i]);
-		        insertStmt.setInt(6, k_id[i]);
-		        insertStmt.setString(7, text[i]);
-		        insertStmt.execute();
-
-			}
-			catch(SQLException sqle) {
-				System.out.println("2"+sqle.getMessage());
-			}
+		try {
+			ResultSet rs = stmt
+					.executeQuery("select sollst_tag from m_sollstunden where m_id = "
+							+ m_id);
+			rs.next();
+			sollstd = rs.getInt("sollst_tag");
+		} catch (Exception e) {
+			System.out.println("Fatal error: sollstd_tag not available! "
+					+ e.getMessage());
+			return false;
 		}
 
+		if (t_id == 1) {
+			von = tagesdatum + " " + fromHour + ":" + fromMinute + ":00";
+			bis = tagesdatum + " " + toHour + ":" + toMinute + ":00";
+
+			pauseStunden /= 60;
+
+			ueberstunden = (float) (((toHour * 60 + toMinute) / 60.0
+					- (fromHour * 60 + fromMinute) / 60.0 - pauseStunden) - sollstd);
+		}
+
+		else if (t_id == 3 || t_id == 4 || t_id == 5) {
+			von = "1111-11-11 00:00:00";
+			bis = "1111-11-11 00:00:00";
+			pauseStunden = 0;
+			pauseStunden /= 60;
+			ueberstunden = 0;
+		}
+
+		else {
+			von = "1111-11-11 00:00:00";
+			bis = "1111-11-11 00:00:00";
+			pauseStunden = 0;
+			pauseStunden /= 60;
+			ueberstunden = -sollstd;
+		}
+		try {
+			ResultSet rs = stmt
+					.executeQuery("select count(*) from mitarb_monat where id="
+							+ m_id + " and datum ='" + monat + "-01'");
+			rs.next();
+			if (rs.getInt(1) != 0) {
+				ResultSet rs1 = stmt
+						.executeQuery("select uebertrag from mitarb_monat where id="
+								+ m_id + " and datum ='" + monat + "-01'");
+				rs1.next();
+				BigDecimal bd = rs1.getBigDecimal("uebertrag");
+				float uebertrag = bd.floatValue();
+				uebertrag = uebertrag + ueberstunden;
+
+				stmt.execute("update mitarb_monat set uebertrag = " + uebertrag
+						+ " where id=" + m_id + " and datum ='" + monat
+						+ "-01'");
+			}
+
+			else {
+				stmt.execute("insert into mitarb_monat values('" + monat
+						+ "-01', " + m_id + "," + ueberstunden + ")");
+			}
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		PreparedStatement insertStmt;
+		String insertString = "INSERT INTO mitarb_tag VALUES (?, ?, ?, ?, ?, ?, ?, ? )";
+
+		try {
+			insertStmt = con.prepareStatement(insertString);
+			insertStmt.setInt(1, m_id);
+			insertStmt.setString(2, monat + "-01");
+			insertStmt.setString(3, tagesdatum);
+			insertStmt.setString(4, von);
+			insertStmt.setString(5, bis);
+			insertStmt.setFloat(7, pauseStunden * 60);
+			insertStmt.setFloat(8, ueberstunden);
+			insertStmt.setInt(6, t_id);
+			insertStmt.execute();
+		} catch (SQLException sqle) {
+			System.out.println("4" + sqle.getMessage());
+			return false;
+		}
+
+		return true;
 	}
 
 	public void writeEmployeeActivity(int m_id, Date datum, int[] k_id,
-			int[] dauer, String[] text) {
+			Time[] dauerVon, String[] text) {
 
 		int activityCount = k_id.length;
 
@@ -302,10 +357,10 @@ public class MySQL {
 		for (int i = 0; i < activityCount; i++) {
 
 			PreparedStatement insertStmt;
-			String insertString = "INSERT INTO mitarb_taetigkt VALUES (?, ?, ?, ?, ?, ?)";
+			String insertString = "INSERT INTO mitarb_taetigkt VALUES (?, ?, ?, ?, ?, ? ,?)";
 
-			float dauerStunden = dauer[i];
-			dauerStunden /= 60;
+			// float dauerStunden = dauer[i];
+			// dauerStunden /= 60;
 
 			try {
 				insertStmt = con.prepareStatement(insertString);
@@ -313,9 +368,10 @@ public class MySQL {
 				insertStmt.setInt(1, m_id);
 				insertStmt.setString(2, monat + "-01");
 				insertStmt.setString(3, tagesdatum);
-				insertStmt.setInt(4, k_id[i]);
-				insertStmt.setFloat(5, dauerStunden);
-				insertStmt.setString(6, text[i]);
+				insertStmt.setTime(4, dauerVon[i]);
+				insertStmt.setTime(5, new Time(23, 0, 0));
+				insertStmt.setInt(6, k_id[i]);
+				insertStmt.setString(7, text[i]);
 				insertStmt.execute();
 
 			} catch (SQLException sqle) {
@@ -624,7 +680,7 @@ public class MySQL {
 				line.add(partEndTime[0] + ":" + partEndTime[1]);
 
 				// Pause
-				BigDecimal bd = rs.getBigDecimal("pause");						///WTF WTF WTF WTF, Seriously
+				BigDecimal bd = rs.getBigDecimal("pause");
 				float f = bd.floatValue();
 				f *= 60;
 				int pauseMin = (int) f;
@@ -753,7 +809,7 @@ public class MySQL {
 		return false;
 	}
 
-	/*public boolean newCategory(int category_id, String name, int district_id) {
+	public boolean newCategory(int category_id, String name, int district_id) {
 		try {
 			ResultSet rs = stmt
 					.executeQuery("select * from kategorie where id = "
@@ -776,9 +832,10 @@ public class MySQL {
 							+ e.getMessage());
 		}
 		return false;
-	}*/
+	}
 
-	public void updateComboBoxUser(DefaultComboBoxModel<User> dcbm) throws SQLException {
+	public void updateComboBoxUser(DefaultComboBoxModel<User> dcbm)
+			throws SQLException {
 		dcbm.removeAllElements();
 		for (Iterator<User> i = getUsers().iterator(); i.hasNext();) {
 			User tmpUser = i.next();
@@ -862,13 +919,13 @@ public class MySQL {
 				temp.addElement(bereich);
 				temp.addElement(kategorie);
 				temp.addElement(text);
-				temp.addElement(dauerStr);
+				//temp.addElement(dauerStr);
 
 				values.addElement(temp);
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			return values;
 		}
 		return values;
@@ -913,28 +970,65 @@ public class MySQL {
 		String monat;
 		String tagesdatum;
 		SimpleDateFormat df;
-		df = new SimpleDateFormat( "yyyy-MM-dd" );
-		df.setTimeZone( TimeZone.getDefault() );
+		df = new SimpleDateFormat("yyyy-MM-dd");
+		df.setTimeZone(TimeZone.getDefault());
 		tagesdatum = df.format(date);
 
 		try {
-			ResultSet rs = stmt.executeQuery("select ueberstunden from mitarb_tag where id = " + m_id + " and tagesdatum = '"+ tagesdatum + "'");
+			ResultSet rs = stmt
+					.executeQuery("select ueberstunden from mitarb_tag where id = "
+							+ m_id + " and tagesdatum = '" + tagesdatum + "'");
 			rs.next();
-			/*BigDecimal bd = rs.getBigDecimal("ueberstunden");
-			float ueberstunden = bd.floatValue();
-
-			df = new SimpleDateFormat("yyyy-MM");
-			monat = df.format(date);
-
-			stmt.execute("update mitarb_monat set uebertrag = (uebertrag - " + ueberstunden + ") where id=" + m_id + " and datum ='" + monat + "-01'");
-*/
+			/*
+			 * BigDecimal bd = rs.getBigDecimal("ueberstunden"); float
+			 * ueberstunden = bd.floatValue();
+			 * 
+			 * df = new SimpleDateFormat("yyyy-MM"); monat = df.format(date);
+			 * 
+			 * stmt.execute("update mitarb_monat set uebertrag = (uebertrag - "
+			 * + ueberstunden + ") where id=" + m_id + " and datum ='" + monat +
+			 * "-01'");
+			 */
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public boolean checkPasswordCorrect(String string) throws SQLException, WrongPasswordException {
+	public Time[] getStandardTimes(int id) {
+		Time[] ret = new Time[3];
+		try {
+			ResultSet rs = stmt
+					.executeQuery("SELECT `stand_von` , `stand_bis` FROM `mitarbeiter` where id = "
+							+ id);
+			while (rs.next()) {
+				ret[0] = rs.getTime("stand_von");
+				ret[1] = rs.getTime("stand_bis");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return ret;
+	}
+
+	public int getPause(int id) {
+		// TODO Auto-generated method stub
+		int ret = 0;
+		try {
+			ResultSet rs = stmt
+					.executeQuery("SELECT `stand_pause` FROM `mitarbeiter` where id = "
+							+ id);
+			while (rs.next()) {
+				ret = rs.getInt("stand_pause");
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return ret;
+	}
+
+	public boolean checkPasswordCorrect(String string) throws SQLException,
+			WrongPasswordException {
 		boolean retValue = false;
 		String stm = "select count(*) from mitarbeiter where pwd = ?";
 		this.connect();
@@ -942,15 +1036,15 @@ public class MySQL {
 		pps.setString(1, string);
 		ResultSet rs = pps.executeQuery();
 		rs.next();
-		if(rs.getInt(1) == 0) {
+		if (rs.getInt(1) == 0) {
 			throw new WrongPasswordException("Old Password wrong");
-		}
-		else 
+		} else
 			retValue = true;
 		return retValue;
 	}
-	
-	public int setNewStandardWorkingTime(User u, Time von, Time bis, int pause) throws SQLException {
+
+	public int setNewStandardWorkingTime(User u, Time von, Time bis, int pause)
+			throws SQLException {
 		this.connect();
 		String stm = "update mitarbeiter set stand_von=?, stand_bis=?, stand_pause=? where id=?";
 		PreparedStatement pps = this.con.prepareStatement(stm);
@@ -961,64 +1055,95 @@ public class MySQL {
 		return pps.executeUpdate();
 	}
 
-	public int setNewSollStd(User loggedInUser, java.util.Date changeDate, int newSollStd) throws SQLException {
+	public int setNewSollStd(User loggedInUser, java.util.Date changeDate,
+			int newSollStd) throws SQLException {
 		this.connect();
 		String stm = "insert into m_sollstunden(m_id, sollst_tag, datum) values(?,?,?)";
 		java.sql.Date sdate = new java.sql.Date(changeDate.getTime());
 		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setInt(1,loggedInUser.getId());
+		pps.setInt(1, loggedInUser.getId());
 		pps.setDate(3, sdate);
 		pps.setInt(2, newSollStd);
 		return pps.executeUpdate();
 	}
-	
-	public Vector<MitarbeiterMonat> getMitarbeiterMonatForAuswertung(User user, Date von, Date bis) throws SQLException {
+
+	public Vector<MitarbeiterMonat> getMitarbeiterMonatForAuswertung(User user,
+			Date von, Date bis) throws SQLException {
 		Calendar createNewDate = GregorianCalendar.getInstance();
 		Calendar handleInputs = GregorianCalendar.getInstance();
 		java.sql.Date vons;
 		java.sql.Date biss;
 		Vector<MitarbeiterMonat> retValue = new Vector<MitarbeiterMonat>();
-		//---------------
+		// ---------------
 		handleInputs.setTime(von);
-		createNewDate.set(handleInputs.get(Calendar.YEAR), handleInputs.get(Calendar.MONTH), 1);
+		createNewDate.set(handleInputs.get(Calendar.YEAR),
+				handleInputs.get(Calendar.MONTH), 1);
 		vons = new java.sql.Date(createNewDate.getTimeInMillis());
 		handleInputs.setTime(bis);
-		createNewDate.set(handleInputs.get(Calendar.YEAR), handleInputs.get(Calendar.MONTH), 1);
+		createNewDate.set(handleInputs.get(Calendar.YEAR),
+				handleInputs.get(Calendar.MONTH), 1);
 		biss = new java.sql.Date(createNewDate.getTimeInMillis());
 		this.connect();
 		String stm = "select * from mitarb_monat where id = ? and datum between ? and ?";
-		//-----------------------
+		// -----------------------
 		PreparedStatement pps = this.con.prepareStatement(stm);
 		pps.setInt(1, user.getId());
 		pps.setDate(2, vons);
 		pps.setDate(3, biss);
 		ResultSet rs = pps.executeQuery();
-		while(rs.next()) {
-			retValue.add(new MitarbeiterMonat(rs.getInt(2), rs.getDate(1), rs.getFloat(3)));
+		while (rs.next()) {
+			retValue.add(new MitarbeiterMonat(rs.getInt(2), rs.getDate(1), rs
+					.getFloat(3)));
 		}
 		return retValue;
 	}
-	
-	public Vector<MitarbeiterTag> getMitarbeiterTagForAuswertung(User user, Date monatsdatum) throws SQLException {
+
+	public Vector<MitarbeiterTag> getMitarbeiterTagForAuswertung(User user,
+			Date monatsdatum) throws SQLException {
 		this.connect();
 		Vector<MitarbeiterTag> retValue = new Vector<MitarbeiterTag>();
 		java.sql.Date monatsds = new java.sql.Date(monatsdatum.getTime());
 		String stm = "select * from mitarb_tag where id = ? and datum = ?";
-		String stmsollstd = "select sollst_tag from m_sollstunden where id = ? and datum <= ? order by datum desc";
+		String stmsollstd = "select sollst_tag from m_sollstunden where m_id = ? and datum <= ? order by datum desc";
 		PreparedStatement pps = this.con.prepareStatement(stm);
 		PreparedStatement pps2;
 		pps.setInt(1, user.getId());
 		pps.setDate(2, monatsds);
 		ResultSet rs = pps.executeQuery();
 		ResultSet rs2;
-		while(rs.next()) {
+		while (rs.next()) {
 			pps2 = this.con.prepareStatement(stmsollstd);
 			pps2.setInt(1, user.getId());
 			pps2.setDate(2, rs.getDate("tagesdatum"));
 			rs2 = pps2.executeQuery();
 			rs2.next();
-			retValue.add(new MitarbeiterTag(rs.getInt("id"), rs.getDate("datum"), rs.getDate("tagesdatum"), rs.getInt("t_id"), rs.getTime("von"), rs.getTime("bis"), rs.getInt("pause"), rs2.getInt("sollst_tag")));
+			System.out.println(rs2.getInt("sollst_tag"));
+			retValue.add(new MitarbeiterTag(rs.getInt("id"), rs
+					.getDate("datum"), rs.getDate("tagesdatum"), rs
+					.getInt("t_id"), rs.getTime("von"), rs.getTime("bis"), rs
+					.getInt("pause"), rs2.getInt("sollst_tag"), rs.getFloat("ueberstunden")));
 		}
 		return retValue;
+	}
+
+	public String getActivity(int taetigkeits_id) throws SQLException {
+		this.connect();
+		String stm = "select bezeichnung from taetigkeit where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, taetigkeits_id);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		return rs.getString(1);
+	}
+
+	public float getUebertragsSumme(Date datum) throws SQLException {
+		java.sql.Date d = new java.sql.Date(datum.getTime());
+		this.connect();
+		String stm = "select sum(uebertrag) from mitarb_monat where datum < ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setDate(1, d);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		return rs.getFloat(1);
 	}
 }
