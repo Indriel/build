@@ -139,28 +139,25 @@ public class MySQL {
 		return true;
 	}
 
-	public boolean newEmployee(String name, String pwd, String begin) {
-		try {
-			ResultSet rs = stmt.executeQuery("select max(id) from mitarbeiter");
-			rs.next();
-			int id = rs.getInt(1) + 1;
-
-			PreparedStatement pstmt = con
-					.prepareStatement("insert into mitarbeiter values(?,?,?,?,?)");
-
-			pstmt.setInt(1, id);
-			pstmt.setString(2, name);
-			pstmt.setString(3, pwd);
-			pstmt.setString(4, begin);
-			pstmt.setString(5, null);
-
-			pstmt.execute();
-
-		} catch (Exception e) {
-			System.out.println("Exception newEmployee(...): " + e.getMessage());
-			return false;
-		}
-		return true;
+	public int newEmployee(String name, String pwd, Date d) throws SQLException {
+		this.connect();
+		String stm = "insert into mitarbeiter(id,name,pwd,ang_von,ang_bis,stand_von,stand_bis,stand_pause) values (?,?,?,?,?,?,?,?)";
+		int id = this.getMaxUserId();
+		java.sql.Date ang_von = new java.sql.Date(d.getTime());
+		java.sql.Date ang_bis = null;
+		Time stand_von = new Time(7, 0, 0);
+		Time stand_bis = new Time(15, 30, 0);
+		int pause = 30;
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, id);
+		pps.setString(2, name);
+		pps.setString(3, pwd);
+		pps.setDate(4, ang_von);
+		pps.setDate(5, ang_bis);
+		pps.setTime(6, stand_von);
+		pps.setTime(7, stand_bis);
+		pps.setInt(8, pause);
+		return pps.executeUpdate();
 	}
 
 	public Vector<Category> getCategories(int id) {
@@ -783,30 +780,16 @@ public class MySQL {
 		return false;
 	}
 
-	public boolean newDistrict(int id, String name) {
-		try {
-			ResultSet rs = stmt
-					.executeQuery("select * from bereich where id = " + id);
-			boolean x = true;
-			while (rs.next()) {
-				x = false;
-			}
-
-			if (x) {
-				try {
-					stmt.execute("insert into bereich values(" + id + ",'"
-							+ name + "')");
-				} catch (Exception e) {
-					x = false;
-				}
-			}
-			return x;
-
-		} catch (Exception e) {
-			System.out.println("newDistrict(int id, String name) "
-					+ e.getMessage());
-		}
-		return false;
+	public boolean newDistrict(int id, String name) throws SQLException {
+		this.connect();
+		boolean retValue = true;
+		String stm = "insert into bereich(id, bezeichnung) values(?,?)";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, id);
+		pps.setString(2, name);
+		if(pps.executeUpdate() == 0)
+			retValue = false;
+		return retValue;
 	}
 
 	public boolean newCategory(int category_id, String name, int district_id) {
@@ -1145,5 +1128,131 @@ public class MySQL {
 		ResultSet rs = pps.executeQuery();
 		rs.next();
 		return rs.getFloat(1);
+	}
+
+	public void setNewSollStdAll(int newSollStd, Date changeDate) throws SQLException {
+			this.connect();
+			Vector<User> u = this.getUsers();
+			String stm = "insert into m_sollstunden(m_id, sollst_tag, datum) values(?,?,?)";
+			java.sql.Date sdate = new java.sql.Date(changeDate.getTime());
+			PreparedStatement pps = this.con.prepareStatement(stm);
+			Iterator<User> i = u.iterator();
+			while(i.hasNext()) {
+				pps.setInt(1, i.next().getId());
+				pps.setDate(3, sdate);
+				pps.setInt(2, newSollStd);
+				pps.executeUpdate();
+			}
+			return;
+	}
+
+	public int setNewStandardWorkingTimeForAll(int pause, Time von, Time bis) throws SQLException {
+		this.connect();
+		String stm = "update mitarbeiter set stand_von=?, stand_bis=?, stand_pause=?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setTime(1, von);
+		pps.setTime(2, bis);
+		pps.setInt(3, pause);
+		return pps.executeUpdate();
+	}
+
+	public int getMaxDistrictId() throws SQLException {
+		this.connect();
+		String stm = "select max(id) from bereich";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		
+		return rs.getInt(1) + 1;
+	}
+
+	public int updateDistrict(int dId, String newName) throws SQLException {
+		this.connect();
+		String stm = "update bereich set bezeichnung = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setString(1, newName);
+		pps.setInt(2, dId);
+		return pps.executeUpdate();
+	}
+
+	public int deleteDistrict(int dId) throws SQLException, DistrictInUseException {
+		this.connect();
+		String stm = "delete from bereich where id = ?";
+		String check = "select count(*) from mitarb_taetigkt where b_id = ?";
+		PreparedStatement pps = this.con.prepareStatement(check);
+		pps.setInt(1, dId);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		if(rs.getInt(1) != 0)
+			throw new DistrictInUseException("Bereich darf nicht gelöscht werden!");
+		pps = this.con.prepareStatement(stm);
+		pps.setInt(1, dId);
+		return pps.executeUpdate();
+	}
+
+	public int disableUser(User disableUser, Date disableDate) throws SQLException {
+		this.connect();
+		java.sql.Date d = new java.sql.Date(disableDate.getTime());
+		String stm = "update mitarbeiter set ang_bis = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setDate(1, d);
+		pps.setInt(2, disableUser.getId());
+		return pps.executeUpdate();
+	}
+
+	public int getMaxUserId() throws SQLException {
+		this.connect();
+		String stm = "select max(id) from mitarbeiter";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		
+		return rs.getInt(1) + 1;
+	}
+
+	public int deleteTaetigkeit(int id) throws SQLException, DistrictInUseException {
+		this.connect();
+		String stm = "delete from taetigkeit where id = ?";
+		String check = "select count(*) from mitarb_tag where t_id = ?";
+		PreparedStatement pps = this.con.prepareStatement(check);
+		pps.setInt(1, id);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		if(rs.getInt(1) != 0)
+			throw new DistrictInUseException("Tätigkeit darf nicht gelöscht werden!");
+		pps = this.con.prepareStatement(stm);
+		pps.setInt(1, id);
+		return pps.executeUpdate();
+	}
+
+	public int updateTaetigkeit(int id, String newName) throws SQLException {
+		this.connect();
+		String stm = "update taetigkeit set bezeichnung = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setString(1, newName);
+		pps.setInt(2, id);
+		return pps.executeUpdate();
+	}
+
+	public boolean newTaetigkeit(String newTaetigkeit) throws SQLException {
+		this.connect();
+		boolean retValue = true;
+		String stm = "insert into taetigkeit(id, bezeichnung) values(?,?)";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, this.getMaxTaetigkeitsId());
+		pps.setString(2, newTaetigkeit);
+		if(pps.executeUpdate() == 0)
+			retValue = false;
+		return retValue;
+	}
+	
+	public int getMaxTaetigkeitsId() throws SQLException {
+		this.connect();
+		String stm = "select max(id) from taetigkeit";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		
+		return rs.getInt(1) + 1;
 	}
 }

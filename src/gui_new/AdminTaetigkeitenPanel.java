@@ -1,23 +1,23 @@
 package gui_new;
-import java.awt.BorderLayout;
-
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-
-import javax.swing.WindowConstants;
-import javax.swing.border.BevelBorder;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.BevelBorder;
+
+import model.MitBerTaetCBModel;
+import data.User;
+import data.WorkType;
+import database.DistrictInUseException;
+import database.MySQL;
 
 /**
 * This code was edited or generated using CloudGarden's Jigloo
@@ -32,33 +32,43 @@ import javax.swing.JTextField;
 * LEGALLY FOR ANY CORPORATE OR COMMERCIAL PURPOSE.
 */
 public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements ActionListener{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPanel panelTaetigkeitAnlegen;
 	private JPanel panelTaetigkeitAendern;
 	private JLabel jLabel3;
 	private JLabel jLabel4;
 	private JButton btnTaetigkeitErstellen;
 	private JLabel jLabel5;
+	private JButton btnTaetigkeitBearbeiten;
 	private JLabel lblTaetigkeitLoeschenInfo;
 	private JButton btnTaetigkeitLoeschen;
-	private JComboBox cmbTaetigkeitLoeschen;
+	private JComboBox<WorkType> cmbTaetigkeitLoeschen;
 	private JLabel jLabel7;
 	private JLabel lblTaetigkeitBearbeitenInfo;
 	private JTextField txtTaetigkeitBearbeiten;
 	private JLabel jLabel6;
-	private JComboBox cmbTaetigkeitBearbeiten;
+	private JComboBox<WorkType> cmbTaetigkeitBearbeiten;
 	private JLabel lblTaetigkeitErstellenInfo;
 	private JTextField txtTaetigkeitErstellen;
 	private JLabel jLabel2;
 	private JLabel jLabel1;
 	private JPanel panelTaetigkeitLoeschen;
 
+	
+	private User loggedInUser;
+	private MySQL database;
 	/**
 	* Auto-generated main method to display this 
 	* JPanel inside a new JFrame.
 	*/
 		
-	public AdminTaetigkeitenPanel() {
+	public AdminTaetigkeitenPanel(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 	
@@ -93,7 +103,7 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 				{
 					lblTaetigkeitErstellenInfo = new JLabel();
 					panelTaetigkeitAnlegen.add(lblTaetigkeitErstellenInfo);
-					lblTaetigkeitErstellenInfo.setBounds(12, 116, 671, 10);
+					lblTaetigkeitErstellenInfo.setBounds(12, 104, 671, 22);
 					lblTaetigkeitErstellenInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 				{
@@ -101,6 +111,7 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 					panelTaetigkeitAnlegen.add(btnTaetigkeitErstellen);
 					btnTaetigkeitErstellen.setText("Erstellen");
 					btnTaetigkeitErstellen.setBounds(350, 46, 105, 28);
+					btnTaetigkeitErstellen.addActionListener(this);
 				}
 			}
 			{
@@ -123,10 +134,8 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 					jLabel5.setBounds(12, 45, 67, 21);
 				}
 				{
-					ComboBoxModel cmbTaetigkeitBearbeitenModel = 
-							new DefaultComboBoxModel(
-									new String[] { "Urlaub", "Item Two" });
-					cmbTaetigkeitBearbeiten = new JComboBox();
+					ComboBoxModel<WorkType> cmbTaetigkeitBearbeitenModel = new MitBerTaetCBModel("Taetigkeit");
+					cmbTaetigkeitBearbeiten = new JComboBox<WorkType>();
 					panelTaetigkeitAendern.add(cmbTaetigkeitBearbeiten);
 					cmbTaetigkeitBearbeiten.setModel(cmbTaetigkeitBearbeitenModel);
 					cmbTaetigkeitBearbeiten.setBounds(126, 41, 189, 28);
@@ -145,8 +154,15 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 				{
 					lblTaetigkeitBearbeitenInfo = new JLabel();
 					panelTaetigkeitAendern.add(lblTaetigkeitBearbeitenInfo);
-					lblTaetigkeitBearbeitenInfo.setBounds(12, 132, 671, 10);
+					lblTaetigkeitBearbeitenInfo.setBounds(12, 119, 671, 23);
 					lblTaetigkeitBearbeitenInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+				}
+				{
+					btnTaetigkeitBearbeiten = new JButton();
+					panelTaetigkeitAendern.add(btnTaetigkeitBearbeiten);
+					btnTaetigkeitBearbeiten.setText("Ändern");
+					btnTaetigkeitBearbeiten.setBounds(349, 60, 106, 28);
+					btnTaetigkeitBearbeiten.addActionListener(this);
 				}
 			}
 			{
@@ -169,10 +185,8 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 					jLabel7.setBounds(12, 58, 66, 21);
 				}
 				{
-					ComboBoxModel cmbTaetigkeitLoeschenModel = 
-							new DefaultComboBoxModel(
-									new String[] { "Krankenstand", "Item Two" });
-					cmbTaetigkeitLoeschen = new JComboBox();
+					ComboBoxModel<WorkType> cmbTaetigkeitLoeschenModel = new MitBerTaetCBModel("Taetigkeit");
+					cmbTaetigkeitLoeschen = new JComboBox<WorkType>();
 					panelTaetigkeitLoeschen.add(cmbTaetigkeitLoeschen);
 					cmbTaetigkeitLoeschen.setModel(cmbTaetigkeitLoeschenModel);
 					cmbTaetigkeitLoeschen.setBounds(135, 54, 178, 28);
@@ -182,11 +196,12 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 					panelTaetigkeitLoeschen.add(btnTaetigkeitLoeschen);
 					btnTaetigkeitLoeschen.setText("Löschen");
 					btnTaetigkeitLoeschen.setBounds(351, 55, 97, 28);
+					btnTaetigkeitLoeschen.addActionListener(this);
 				}
 				{
 					lblTaetigkeitLoeschenInfo = new JLabel();
 					panelTaetigkeitLoeschen.add(lblTaetigkeitLoeschenInfo);
-					lblTaetigkeitLoeschenInfo.setBounds(12, 155, 671, 10);
+					lblTaetigkeitLoeschenInfo.setBounds(12, 139, 671, 26);
 					lblTaetigkeitLoeschenInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 				}
 			}
@@ -198,11 +213,36 @@ public class AdminTaetigkeitenPanel extends javax.swing.JPanel implements Action
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnTaetigkeitErstellen) {
-			
+			String newTaetigkeit = this.txtTaetigkeitErstellen.getText();
+			try {
+				this.database.newTaetigkeit(newTaetigkeit);
+				this.lblTaetigkeitErstellenInfo.setText("Tätigkeit erstellt");
+			} catch (SQLException e1) {
+				this.lblTaetigkeitErstellenInfo.setText("Fehler beim Erstellen der Tätigkeit: " + e1.getMessage());
+			}
 		}
 		
 		else if(e.getSource() == this.btnTaetigkeitLoeschen) {
-			
+			WorkType toDel = (WorkType) this.cmbTaetigkeitLoeschen.getSelectedItem();
+			try {
+				this.database.deleteTaetigkeit(toDel.getId());
+				this.lblTaetigkeitLoeschenInfo.setText("Löschen der Tätigkeit erfolgreich");
+			} catch (SQLException e1) {
+				this.lblTaetigkeitLoeschenInfo.setText("Fehler beim Löschen der Tätigkeit: " + e1.getMessage());
+			} catch (DistrictInUseException e1) {
+				this.lblTaetigkeitLoeschenInfo.setText(e1.getMessage());
+			}
+		}
+		
+		else if(e.getSource() == this.btnTaetigkeitBearbeiten) {
+			WorkType wt = (WorkType) this.cmbTaetigkeitBearbeiten.getSelectedItem();
+			String newName = this.txtTaetigkeitBearbeiten.getText();
+			try {
+				this.database.updateTaetigkeit(wt.getId(), newName);
+				this.lblTaetigkeitBearbeitenInfo.setText("Bearbeiten der Tätigkeit erfolgreich");
+			} catch (SQLException e1) {
+				this.lblTaetigkeitBearbeitenInfo.setText("Bearbeiten der Tätigkeit fehlgeschlagen: " + e1.getMessage());
+			}
 		}
 	}
 

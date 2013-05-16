@@ -3,6 +3,7 @@ package gui_new;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.Date;
 
 import javax.swing.BorderFactory;
@@ -165,6 +166,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					panelZeitenStandard.add(btnStandardzeitFestlegen);
 					btnStandardzeitFestlegen.setText("Festlegen");
 					btnStandardzeitFestlegen.setBounds(275, 76, 96, 28);
+					btnStandardzeitFestlegen.addActionListener(this);
 				}
 			}
 			{
@@ -197,6 +199,7 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 					panelSSollstunden.add(btnSSollstundenFestlegen);
 					btnSSollstundenFestlegen.setText("Festlegen");
 					btnSSollstundenFestlegen.setBounds(275, 58, 99, 28);
+					btnSSollstundenFestlegen.addActionListener(this);
 				}
 				{
 					lblSSollstunden = new JLabel();
@@ -291,11 +294,37 @@ public class AdminZeitenPanel extends javax.swing.JPanel implements ActionListen
 		}
 		
 		else if(e.getSource() == this.btnSSollstundenFestlegen) {
-			
+			this.setSollStunden();
 		}
 		
 		else if(e.getSource() == this.btnStandardzeitFestlegen) {
-			
+			this.setStandardzeitFestlegen();
+		}
+	}
+
+	private void setStandardzeitFestlegen() {
+		int vonH = Integer.parseInt((String) this.cmbStandardzeitVonH.getSelectedItem());
+		int vonMin = Integer.parseInt((String) this.cmbStandardzeitVonMIN.getSelectedItem());
+		int bisH = Integer.parseInt((String) this.cmbStandardzeitBisH.getSelectedItem());
+		int bisMin = Integer.parseInt((String) this.cmbStandardzeitBisMIN.getSelectedItem());
+		Time von = new Time(vonH, vonMin, 0);
+		Time bis = new Time(bisH, bisMin, 0);
+		int pause = Integer.parseInt((String) this.cmbStandardzeitPause.getSelectedItem());
+		this.lblStandardzeitInfo.setText("Update der Standardzeiten erfolgreich");
+		try {
+			this.database.setNewStandardWorkingTimeForAll(pause, von, bis);
+		} catch (SQLException e) {
+			this.lblStandardzeitInfo.setText("Fehler beim Update der Standardzeiten: " + e.getMessage());
+		}
+	}
+
+	private void setSollStunden() {
+		int newSollStd = Integer.parseInt((String) this.cmbSSollstundenNeu.getSelectedItem());
+		Date changeDate = this.choseAenderungszeitNonSpez.getDate();
+		try {
+			this.database.setNewSollStdAll(newSollStd, changeDate);
+		} catch (SQLException e) {
+			this.lblSSollstunden.setText("Fehler beim Update der Soll-Stunden: " + e.getMessage());
 		}
 	}
 

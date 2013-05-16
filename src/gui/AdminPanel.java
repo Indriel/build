@@ -521,7 +521,7 @@ public class AdminPanel extends JPanel {
 			{
 				if(jTextFieldPassword.getText().length() != 0)
 				{
-					sql.newEmployee(jTextFieldEmployeeName.getText(), jTextFieldPassword.getText(), begin);
+					//sql.newEmployee(jTextFieldEmployeeName.getText(), jTextFieldPassword.getText(), begin);
 					//sql.updateComboBoxUser(dcbmRemove);
 					//sql.updateComboBoxUser(dcbmReset);
 					jTextFieldEmployeeName.setText("");

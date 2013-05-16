@@ -2,6 +2,7 @@ package gui_new;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -13,6 +14,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
+
+import model.MitBerTaetCBModel;
+
+import data.District;
+import data.User;
+import database.DistrictInUseException;
+import database.MySQL;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -29,14 +37,14 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 	private JPanel panelBereichanlegen;
 	private JLabel jLabel5;
 	private JButton btnBereichLoeschenLoeschen;
-	private JComboBox cmbBereichLoeschenBereich;
+	private JComboBox<District> cmbBereichLoeschenBereich;
 	private JLabel lblBereichLoeschenBereich;
 	private JLabel lblBereichLoeschenInfo;
 	private JButton btnBereichAendernAendern;
 	private JTextField txtBereichAendernNeuerBereichname;
 	private JLabel lblBereichname;
 	private JLabel lblBereichAendernInfo;
-	private JComboBox cmbBereichAendernBereich;
+	private JComboBox<District> cmbBereichAendernBereich;
 	private JButton btnBereichAnlegenAnlegen;
 	private JLabel lblBereichAnlegenInfo;
 	private JTextField txtBereichanlegenName;
@@ -47,12 +55,16 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 	private JPanel panelBereichloeschen;
 	private JPanel panelBereichaendern;
 
+	private User loggedInUser;
+	private MySQL database;
 	/**
 	 * Auto-generated main method to display this JPanel inside a new JFrame.
 	 */
 
-	public AdminBereichePanel() {
+	public AdminBereichePanel(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 
@@ -88,7 +100,7 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 				{
 					lblBereichAnlegenInfo = new JLabel();
 					panelBereichanlegen.add(lblBereichAnlegenInfo);
-					lblBereichAnlegenInfo.setBounds(12, 140, 677, 10);
+					lblBereichAnlegenInfo.setBounds(12, 140, 677, 20);
 					lblBereichAnlegenInfo.setBorder(BorderFactory
 							.createBevelBorder(BevelBorder.LOWERED));
 				}
@@ -120,9 +132,8 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 					jLabel5.setBounds(12, 53, 60, 21);
 				}
 				{
-					ComboBoxModel cmbBereichAendernBereichModel = new DefaultComboBoxModel(
-							new String[] { "Zentrum", "Item Two" });
-					cmbBereichAendernBereich = new JComboBox();
+					ComboBoxModel<District> cmbBereichAendernBereichModel = new MitBerTaetCBModel("Bereich");
+					cmbBereichAendernBereich = new JComboBox<District>();
 					panelBereichaendern.add(cmbBereichAendernBereich);
 					cmbBereichAendernBereich
 							.setModel(cmbBereichAendernBereichModel);
@@ -131,7 +142,7 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 				{
 					lblBereichAendernInfo = new JLabel();
 					panelBereichaendern.add(lblBereichAendernInfo);
-					lblBereichAendernInfo.setBounds(12, 157, 677, 10);
+					lblBereichAendernInfo.setBounds(12, 147, 677, 20);
 					lblBereichAendernInfo.setBorder(BorderFactory
 							.createBevelBorder(BevelBorder.LOWERED));
 				}
@@ -152,6 +163,7 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 					panelBereichaendern.add(btnBereichAendernAendern);
 					btnBereichAendernAendern.setText("Ändern");
 					btnBereichAendernAendern.setBounds(433, 83, 87, 28);
+					btnBereichAendernAendern.addActionListener(this);
 				}
 			}
 			{
@@ -170,7 +182,7 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 				{
 					lblBereichLoeschenInfo = new JLabel();
 					panelBereichloeschen.add(lblBereichLoeschenInfo);
-					lblBereichLoeschenInfo.setBounds(12, 156, 679, 10);
+					lblBereichLoeschenInfo.setBounds(12, 143, 679, 23);
 					lblBereichLoeschenInfo.setBorder(BorderFactory
 							.createBevelBorder(BevelBorder.LOWERED));
 				}
@@ -181,9 +193,8 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 					lblBereichLoeschenBereich.setBounds(12, 55, 66, 21);
 				}
 				{
-					ComboBoxModel cmbBereichLoeschenBereichModel = new DefaultComboBoxModel(
-							new String[] { "Zentrum", "Item Two" });
-					cmbBereichLoeschenBereich = new JComboBox();
+					ComboBoxModel<District> cmbBereichLoeschenBereichModel = new MitBerTaetCBModel("Bereich");
+					cmbBereichLoeschenBereich = new JComboBox<District>();
 					panelBereichloeschen.add(cmbBereichLoeschenBereich);
 					cmbBereichLoeschenBereich
 							.setModel(cmbBereichLoeschenBereichModel);
@@ -194,6 +205,7 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 					panelBereichloeschen.add(btnBereichLoeschenLoeschen);
 					btnBereichLoeschenLoeschen.setText("Löschen");
 					btnBereichLoeschenLoeschen.setBounds(435, 52, 96, 28);
+					btnBereichLoeschenLoeschen.addActionListener(this);
 				}
 			}
 		} catch (Exception e) {
@@ -204,15 +216,50 @@ public class AdminBereichePanel extends javax.swing.JPanel implements
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnBereichAendernAendern) {
-			
+			this.changeDistrict();
 		}
 		
 		else if(e.getSource() == this.btnBereichAnlegenAnlegen) {
-			
+			this.addDistrict();
 		}
 		
 		else if(e.getSource() == this.btnBereichLoeschenLoeschen) {
-			
+			this.deleteDistrict();
+		}
+	}
+
+	private void deleteDistrict() {
+		int dId = ((District)this.cmbBereichLoeschenBereich.getSelectedItem()).getId();
+		try {
+			this.database.deleteDistrict(dId);
+		} catch (SQLException e) {
+			this.lblBereichLoeschenInfo.setText("Löschen des Bereichs fehlgeschlagen: " + e.getMessage());
+		} catch (DistrictInUseException e) {
+			this.lblBereichLoeschenInfo.setText(e.getMessage());
+		}
+	}
+
+	private void changeDistrict() {
+		int dId = ((District)this.cmbBereichAendernBereich.getSelectedItem()).getId();
+		String newName = this.txtBereichAendernNeuerBereichname.getText();
+		this.lblBereichAendernInfo.setText("Ändern des Bereichs erfolgreich");
+		try {
+			this.database.updateDistrict(dId, newName);
+		} catch (SQLException e) {
+			this.lblBereichAendernInfo.setText("Änderung des Bereichs fehlgeschlagen: " + e.getMessage());
+		}
+	}
+
+	private void addDistrict() {
+		int newId;
+		try {
+			newId = this.database.getMaxDistrictId();
+			this.database.newDistrict(newId, this.txtBereichanlegenName.getText());
+			this.lblBereichAnlegenInfo.setText("Anlegen des Bereichs erfolgreich");
+			((MitBerTaetCBModel) this.cmbBereichAendernBereich.getModel()).refresh();
+			((MitBerTaetCBModel) this.cmbBereichLoeschenBereich.getModel()).refresh();
+		} catch (SQLException e) {
+			this.lblBereichAnlegenInfo.setText("Anlegen des Bereichs fehlgeschlagen: " + e.getMessage());
 		}
 	}
 

@@ -63,7 +63,7 @@ public class AdminPanel extends javax.swing.JPanel {
 					tpaneAdmin_panelUser.setLayout(tpaneAdmin_panelUserLayout);
 					tpaneAdmin.addTab("Benutzereinstellungen", tpaneAdmin_panelUser);
 					{
-						tpaneAdmin_panelUser_UserSettings = new AdminUserPanel();
+						tpaneAdmin_panelUser_UserSettings = new AdminUserPanel(this.loggedInUser);
 						tpaneAdmin_panelUser_UserSettings.setVisible(true);
 						tpaneAdmin_panelUser.add(tpaneAdmin_panelUser_UserSettings, BorderLayout.CENTER);
 					}
@@ -73,7 +73,7 @@ public class AdminPanel extends javax.swing.JPanel {
 					tpaneAdmin_panelBereiche.setLayout(tpaneAdmin_panelBereicheLayout);
 					tpaneAdmin.addTab("Bereiche", tpaneAdmin_panelBereiche);
 					{
-						tpaneAdmin_panelBereiche_BereichSettings = new AdminBereichePanel();
+						tpaneAdmin_panelBereiche_BereichSettings = new AdminBereichePanel(this.loggedInUser);
 						tpaneAdmin_panelBereiche_BereichSettings.setVisible(true);
 						tpaneAdmin_panelBereiche.add(tpaneAdmin_panelBereiche_BereichSettings, BorderLayout.CENTER);
 					}
@@ -93,7 +93,7 @@ public class AdminPanel extends javax.swing.JPanel {
 					tpaneAdmin_panelTaetigkeiten.setLayout(tpaneAdmin_panelTaetigkeitenLayout);
 					tpaneAdmin.addTab("Taetigkeiten", tpaneAdmin_panelTaetigkeiten);
 					{
-						this.tpaneAdmin_panelTaetigkeiten_TSettings = new AdminTaetigkeitenPanel();
+						this.tpaneAdmin_panelTaetigkeiten_TSettings = new AdminTaetigkeitenPanel(this.loggedInUser);
 						this.tpaneAdmin_panelTaetigkeiten_TSettings.setVisible(true);
 						tpaneAdmin_panelTaetigkeiten.add(this.tpaneAdmin_panelTaetigkeiten_TSettings);
 					}

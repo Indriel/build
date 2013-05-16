@@ -9,6 +9,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.Date;
 
 import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
@@ -22,7 +24,12 @@ import javax.swing.border.BevelBorder;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import model.MitBerTaetCBModel;
+
 import com.toedter.calendar.JDateChooser;
+
+import data.User;
+import database.MySQL;
 
 /**
 * This code was edited or generated using CloudGarden's Jigloo
@@ -66,13 +73,18 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 	private JLabel lblCreateUser;
 	private JDateChooser dchCreateUserED;
 
+	
+	private User loggedInUser;
+	private MySQL database;
 	/**
 	* Auto-generated main method to display this 
 	* JPanel inside a new JFrame.
 	*/
 		
-	public AdminUserPanel() {
+	public AdminUserPanel(User loggedInUser) {
 		super();
+		this.loggedInUser = loggedInUser;
+		this.database = MySQL.getInstance();
 		initGUI();
 	}
 	
@@ -130,6 +142,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 							panelCreateUser.add(btnCreateUserCreate);
 							btnCreateUserCreate.setText("Erstellen");
 							btnCreateUserCreate.setBounds(369, 84, 85, 28);
+							btnCreateUserCreate.addActionListener(this);
 						}
 						{
 							dchCreateUserED = new JDateChooser();
@@ -139,7 +152,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						{
 							lblCreateUserInfo = new JLabel();
 							panelCreateUser.add(lblCreateUserInfo);
-							lblCreateUserInfo.setBounds(12, 170, 616, 10);
+							lblCreateUserInfo.setBounds(12, 158, 616, 22);
 							lblCreateUserInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 						}
 					}
@@ -167,9 +180,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						jLabel4.setBounds(12, 82, 115, 21);
 					}
 					{
-						ComboBoxModel cmbChangePasswordUsersModel = 
-								new DefaultComboBoxModel(
-										new String[] { "Angestellter 1", "Item Two" });
+						ComboBoxModel cmbChangePasswordUsersModel = new MitBerTaetCBModel("Mitarbeiter");
 						cmbChangePasswordUsers = new JComboBox();
 						panelChangePassword.add(cmbChangePasswordUsers);
 						cmbChangePasswordUsers.setModel(cmbChangePasswordUsersModel);
@@ -183,7 +194,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 					{
 						lblChangePasswordInfo = new JLabel();
 						panelChangePassword.add(lblChangePasswordInfo);
-						lblChangePasswordInfo.setBounds(12, 165, 616, 10);
+						lblChangePasswordInfo.setBounds(12, 152, 616, 23);
 						lblChangePasswordInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 					}
 					{
@@ -191,6 +202,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						panelChangePassword.add(btnChangePasswordChange);
 						btnChangePasswordChange.setText("Ändern");
 						btnChangePasswordChange.setBounds(380, 85, 76, 28);
+						btnChangePasswordChange.addActionListener(this);
 					}
 
 					panelDisableUser = new JPanel();
@@ -204,10 +216,8 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						lblDisableUser.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 					}
 					{
-						ComboBoxModel jComboBox1Model = 
-								new DefaultComboBoxModel(
-										new String[] { "Angestellter 1", "Item Two" });
-						jComboBox1 = new JComboBox();
+						ComboBoxModel<User> jComboBox1Model = new MitBerTaetCBModel("Mitarbeiter");
+						jComboBox1 = new JComboBox<User>();
 						panelDisableUser.add(jComboBox1);
 						jComboBox1.setModel(jComboBox1Model);
 						jComboBox1.setBounds(128, 61, 185, 25);
@@ -222,7 +232,7 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						jLabel6 = new JLabel();
 						panelDisableUser.add(jLabel6);
 						jLabel6.setText("Abmeldedatum");
-						jLabel6.setBounds(12, 98, 104, 21);
+						jLabel6.setBounds(11, 124, 104, 21);
 					}
 					{
 						jDateChooser1 = new JDateChooser();
@@ -234,11 +244,12 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 						panelDisableUser.add(btnDisableUserDisable);
 						btnDisableUserDisable.setText("Abmelden");
 						btnDisableUserDisable.setBounds(381, 95, 93, 28);
+						btnDisableUserDisable.addActionListener(this);
 					}
 					{
 						lblDisableUserInfo = new JLabel();
 						panelDisableUser.add(lblDisableUserInfo);
-						lblDisableUserInfo.setBounds(12, 168, 616, 10);
+						lblDisableUserInfo.setBounds(12, 168, 616, 20);
 						lblDisableUserInfo.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 					}
 				}
@@ -251,15 +262,34 @@ public class AdminUserPanel extends javax.swing.JPanel implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource() == this.btnChangePasswordChange) {
-			
+			String newPasswd = this.txtChangePasswordNewPassword.getText();
+			User u = (User) this.cmbChangePasswordUsers.getSelectedItem();
+			this.database.resetPassword(u.getId(), newPasswd);
+			this.lblChangePasswordInfo.setText("Aktion erfolgreich");
 		}
 		
 		else if(e.getSource() == this.btnCreateUserCreate) {
-			
+			String userName = this.txtUserNameCreateUser.getText();
+			String passwd = this.txtCreateUserPasswort.getText();
+			Date d = this.dchCreateUserED.getDate();
+			this.lblCreateUserInfo.setText("Mitarbeiter erstellt");
+			try {
+				this.database.newEmployee(userName, passwd, d);
+			} catch (SQLException e1) {
+				this.lblCreateUserInfo.setText("Fehler bei der Benutzererstellung: " + e1.getMessage());
+			}
 		}
 		
 		else if(e.getSource() == this.btnDisableUserDisable) {
-			
+			Date disableDate = jDateChooser1.getDate();
+			User disableUser = (User) jComboBox1.getSelectedItem();
+			this.lblDisableUserInfo.setText("Mitarbeiter gesperrt");
+			try {
+				this.database.disableUser(disableUser, disableDate);
+				this.lblDisableUserInfo.setText("Aktion erfolgreich");
+			} catch (SQLException e1) {
+				this.lblDisableUserInfo.setText("Fehler bei der Verbindung zur Datenbank: " + e1.getMessage());
+			}
 		}
 	}
 
