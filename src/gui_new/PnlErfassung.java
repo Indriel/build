@@ -223,7 +223,6 @@ public class PnlErfassung extends javax.swing.JPanel {
 	}
 	private void checkIfEntryAlreadyExists() {
 		Vector<Vector<String>> values;
-		
 		int userID = 0;
 		Date date;
 		if(cbUserAdmin != null) {
@@ -240,7 +239,6 @@ public class PnlErfassung extends javax.swing.JPanel {
 		}	
 		
 		else return;
-		
 		if(sql.entryAlreadyExists(userID, date)) {
 			values = sql.getActivities(userID, date);
 			if(itm != null) 
@@ -502,8 +500,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 		// TODO Auto-generated method stub
 		boolean correctInput = true;
 		Date date;
-		// int userID = ( (User)cbUserAdmin.getSelectedItem()).getId();
-		int userID = 2;
+		 int userID = ( (User)cbUserAdmin.getSelectedItem()).getId();
 		SimpleDateFormat df;
 
 		if (mainDateChooser.getDate() != null) {
@@ -511,7 +508,7 @@ public class PnlErfassung extends javax.swing.JPanel {
 			df = new SimpleDateFormat("yyyy-MM-dd");
 			df.setTimeZone(TimeZone.getDefault());
 			lblMessage.setText("");
-			// System.out.println(df.format( dt ));
+			// lblMessage.setText(df.format( dt ));
 		}
 		else {
 			lblMessage
@@ -583,20 +580,26 @@ public class PnlErfassung extends javax.swing.JPanel {
 						text[i] = itm.getValueAt(i, 1).toString();
 					}
 				} catch (NumberFormatException nfe) {
-					System.out.println(nfe.getMessage());
+					lblMessage.setText(nfe.getMessage());
 					return;
 				}
 			}
-
-			boolean success = sql.writeEmployeeDay(userID, date, fromMinute,
-					fromHour, toMinute, toHour, pause,
-					((WorkType) modelWorkmode.getSelectedItem()).getId());
+			boolean checktime=checkEnteredTimes();
+			boolean success=false;
+			if(checktime){
+				success = sql.writeEmployeeDay(userID, date, fromMinute,
+						fromHour, toMinute, toHour, pause,
+						((WorkType) modelWorkmode.getSelectedItem()).getId());
+			}else{
+				this.lblMessage.setText("Die Minuten der eingetragenen Tätigkeiten übersteigen die Arbeitszeit");
+			}
+			
 
 			if (!success) {
 				if(checkEnteredTimes()){
 				lblMessage.setText("Eintrag für " + df.format(date)
 						+ " erfolgreich überschrieben!");
-
+				sql.deleteActivities(userID, date);
 				sql.resetWorkDay(userID, date);
 				sql.deleteWorkDay(userID, date);
 
@@ -612,11 +615,11 @@ public class PnlErfassung extends javax.swing.JPanel {
 				lblMessage.setText("Eintrag für " + df.format(date)
 						+ " erfolgreich!");
 
-			sql.deleteActivities(userID, date);
+			
 
 			if (modelWorkmode.getSelectedItem().toString()
 					.compareTo("Arbeitstag") == 0) {
-				boolean checktime=checkEnteredTimes();
+				checktime=checkEnteredTimes();
 				if(checktime){
 				sql.writeEmployeeActivity(userID, date, categoryId,
 						durationVon, text);

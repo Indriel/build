@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Date;
 
@@ -18,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.xml.parsers.ParserConfigurationException;
 
+import output.CSV_Creator;
 import output.OutputGenerator;
 
 import com.toedter.calendar.JDateChooser;
@@ -98,16 +100,17 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 					lblMitarbeiter = new JLabel();
 					pnlAuswertung.add(lblMitarbeiter);
 					lblMitarbeiter.setText("Mitarbeiter:");
+					lblMitarbeiter.setOpaque(true);
 				}
 				{
 					ComboBoxModel<User> cbMitarbeiterModel = null;
 					cbMitarbeiter = new JComboBox<User>();
-					if(this.loggedUser.getName().equals("admin")) {
-					cbMitarbeiterModel = new DefaultComboBoxModel<User>(
-							this.sql.getUsers());
-					}
-					else {
-						cbMitarbeiterModel = new DefaultComboBoxModel<User>(new User[]{this.loggedUser});
+					if (this.loggedUser.getName().equals("admin")) {
+						cbMitarbeiterModel = new DefaultComboBoxModel<User>(
+								this.sql.getUsers());
+					} else {
+						cbMitarbeiterModel = new DefaultComboBoxModel<User>(
+								new User[] { this.loggedUser });
 						cbMitarbeiter.setEnabled(false);
 					}
 					pnlAuswertung.add(cbMitarbeiter);
@@ -191,20 +194,37 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 		if (lblOption == null) {
 			lblOption = new JLabel();
 			lblOption.setText("Auswertungsmöglichkeit:");
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				lblOption.setVisible(false);
+			lblOption.setOpaque(true);
 		}
 		return lblOption;
 	}
 
 	private JComboBox<String> getCbOption() {
 		if (cbOption == null) {
-			ComboBoxModel<String> cbOptionModel = new DefaultComboBoxModel<String>(
-					new String[] { "Zusammenfassung", "Detail", "Zeitaufzeichung"});
+			/*ComboBoxModel<String> cbOptionModel = new DefaultComboBoxModel<String>(
+					new String[] { "Zusammenfassung", "Detail",
+							"Zeitaufzeichung" });
 			cbOption = new JComboBox<String>();
 			cbOption.setModel(cbOptionModel);
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				cbOption.setVisible(false);
+			cbOption.setEditable(true);*/
+			cbOption = new JComboBox<String>();
+			ComboBoxModel<String> cbOptionModel;
+			if(this.loggedUser.getId() == 1) {
+				cbOptionModel = new DefaultComboBoxModel<String>(
+						new String[] { "Zusammenfassung", "Detail",
+								"Zeitaufzeichung" });
+			}
+			else {
+				cbOptionModel = new DefaultComboBoxModel<String>(
+						new String[] {"Detail",
+								"Zeitaufzeichung" });
+			}
+			cbOption.setModel(cbOptionModel);
+			cbOption.setEditable(true);
 		}
 		return cbOption;
 	}
@@ -213,8 +233,9 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 		if (lblFormat == null) {
 			lblFormat = new JLabel();
 			lblFormat.setText("Format:");
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				lblFormat.setVisible(false);
+			lblFormat.setOpaque(true);
 		}
 		return lblFormat;
 	}
@@ -222,10 +243,10 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 	private JComboBox<String> getCbFormat() {
 		if (cbFormat == null) {
 			ComboBoxModel<String> cbFormatModel = new DefaultComboBoxModel<String>(
-					new String[] {"CSV", "HTML", "PDF"});
+					new String[] { "CSV", "HTML"});
 			cbFormat = new JComboBox<String>();
 			cbFormat.setModel(cbFormatModel);
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				cbFormat.setVisible(false);
 		}
 		return cbFormat;
@@ -259,8 +280,9 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 		if (lblSuchwort == null) {
 			lblSuchwort = new JLabel();
 			lblSuchwort.setText("Suchtext:");
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				lblSuchwort.setVisible(false);
+			lblSuchwort.setOpaque(true);
 		}
 		return lblSuchwort;
 	}
@@ -268,7 +290,7 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 	private JTextField getTxtSuchtext() {
 		if (txtSuchtext == null) {
 			txtSuchtext = new JTextField();
-			if(!this.loggedUser.getName().equals("admin"))
+			if (!this.loggedUser.getName().equals("admin"))
 				txtSuchtext.setVisible(false);
 		}
 		return txtSuchtext;
@@ -277,38 +299,89 @@ public class pnlAuswertung extends javax.swing.JPanel implements ActionListener 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == this.btnGenerate) {
-			if(this.loggedUser.getName().equals("admin")) {
+			if (this.loggedUser.getName().equals("admin")) {
 				User usr = (User) this.cbMitarbeiter.getSelectedItem();
 				String format = (String) this.cbFormat.getSelectedItem();
 				String auswertung = (String) this.cbOption.getSelectedItem();
 				Date von = this.mainDateChooser.getDate();
 				Date bis = this.minorDateChooser.getDate();
-				this.createResultAdmin(usr,format,auswertung,von,bis);
-			}
-			else {
+				String keyword = txtSuchtext.getText();
+				if (keyword.compareTo("") == 0)
+					keyword = "%";
+				else 
+					keyword = "%"+keyword+"%";
+				try {
+					this.createResultAdmin(usr, format, auswertung, von, bis,
+							keyword);
+				} catch (Exception ex) {
+					lblMessage.setText(ex.getMessage());
+					ex.printStackTrace();
+				}
+			} else {
 				Date von = this.mainDateChooser.getDate();
 				Date bis = this.minorDateChooser.getDate();
-				this.createResult(von,bis);
+				this.createResult(von, bis);
 			}
 		}
 	}
 
-	private void createResultAdmin(User usr, String format, String auswertung, Date von, Date bis) {
-		// TODO Auto-generated method stub
-		
+	private void createResultAdmin(User usr, String format, String auswertung,
+			Date von, Date bis, String keyword) throws SQLException,
+			ParserConfigurationException {
+		boolean all = false;
+
+		if (usr.getName().compareTo("admin") == 0) {
+			all = true;
+		}
+		if (auswertung.compareTo("Zusammenfassung") == 0) {
+			try {
+				OutputGenerator.generateZusammenfassungOutput(all, usr, format,
+						von, bis, keyword);
+			} catch (IOException e) {
+				this.lblMessage.setText("Fehler bei der CSV-Erstellung");
+				e.printStackTrace();
+			}
+		}
+		else if (auswertung.compareTo("Detail") == 0) {
+			try {
+				OutputGenerator.generateOutputDetail(all, usr, format,
+						von, bis, keyword);
+			} catch (IOException e) {
+				this.lblMessage.setText("Fehler bei der CSV-Erstellung");
+				e.printStackTrace();
+			}
+		}
+		else if (auswertung.compareTo("Zeitaufzeichung") == 0) {
+			System.out.println("Start Zeitaufzeichnung");
+			try {
+				OutputGenerator.generateZeitaufzeichnungOutput(all, usr, format,
+						von, bis, keyword);
+			} catch (IOException e) {
+				this.lblMessage.setText("Fehler bei der CSV-Erstellung");
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	private void createResult(Date von, Date bis) {
 		try {
-			this.lblMessage.setText("Doing Stuff");
-			OutputGenerator.generateOutputMitarbeiter(this.loggedUser, von, bis);
-			this.lblMessage.setText("Erledigt");
-		} catch (SQLException e) {
-			this.lblMessage.setText("Fehler beid Database Connection: " + e.getMessage());
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+				if(this.cbOption.getSelectedItem().equals("Zeitaufzeichung")) {
+					OutputGenerator.generateZeitaufzeichnungOutput(false, this.loggedUser, "HTML", von, bis, "%");
+				}
+				else {
+					OutputGenerator.generateOutputDetail(false, this.loggedUser, "HTML", von, bis, "%");
+				}
+		} 
+		catch(SQLException e) {
+			this.lblMessage.setText("Fehler beim Zugriff auf die Datenbank");
 		}
+		catch (ParserConfigurationException e) {
+			this.lblMessage.setText("Fehler bei der Erstellung der Auswertung");
+		} catch (IOException e) {
+			this.lblMessage.setText("Fehler bei der Speicherung des Auswertungsdokuments");
+		}
+
 	}
 
 }

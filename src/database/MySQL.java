@@ -24,9 +24,11 @@ import data.DayOfWeek;
 import data.District;
 import data.MitarbeiterMonat;
 import data.MitarbeiterTag;
+import data.Mitarbeitertaetigkeit;
 import data.Month;
 import data.User;
 import data.WorkType;
+import data.ZusammenfassungDaten;
 
 public class MySQL {
 
@@ -64,6 +66,7 @@ public class MySQL {
 			if (con != null)
 				con.close();
 		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -71,7 +74,7 @@ public class MySQL {
 		// returns null if the login was unsuccessful
 		User retValue = null;
 		this.connect();
-		String checkUserExistence = "select count(*) from mitarbeiter where name = ? and pwd = ?";
+		String checkUserExistence = "select count(*) from mitarbeiter where name = ? and pwd = ? and ang_bis is null";
 		String getUser = "select id, name from mitarbeiter where name=? and pwd = ?";
 		PreparedStatement pps = this.con.prepareStatement(checkUserExistence);
 		pps.setString(1, user);
@@ -141,23 +144,45 @@ public class MySQL {
 
 	public int newEmployee(String name, String pwd, Date d) throws SQLException {
 		this.connect();
-		String stm = "insert into mitarbeiter(id,name,pwd,ang_von,ang_bis,stand_von,stand_bis,stand_pause) values (?,?,?,?,?,?,?,?)";
+		
 		int id = this.getMaxUserId();
 		java.sql.Date ang_von = new java.sql.Date(d.getTime());
 		java.sql.Date ang_bis = null;
-		Time stand_von = new Time(7, 0, 0);
-		Time stand_bis = new Time(15, 30, 0);
+		Time standvon = new Time(7, 30, 0);
+		Time standbis = new Time(16,0,0);
 		int pause = 30;
-		PreparedStatement pps = this.con.prepareStatement(stm);
+		int sollstd = 8;
+		
+		String ins_mitarbeiter = "insert into mitarbeiter(id,name,pwd,ang_von,ang_bis,stand_von,stand_bis,stand_pause) values(?,?,?,?,?,?,?,?)";
+		String ins_sollStd = "insert into m_sollstunden(m_id,sollst_tag,datum) values(?,?,?)";
+		
+		PreparedStatement pps = this.con.prepareStatement(ins_mitarbeiter);
 		pps.setInt(1, id);
 		pps.setString(2, name);
 		pps.setString(3, pwd);
 		pps.setDate(4, ang_von);
 		pps.setDate(5, ang_bis);
-		pps.setTime(6, stand_von);
-		pps.setTime(7, stand_bis);
+		pps.setTime(6, standvon);
+		pps.setTime(7, standbis);
 		pps.setInt(8, pause);
+		
+		pps.executeUpdate();
+		
+		pps = this.con.prepareStatement(ins_sollStd);
+		pps.setInt(1, id);
+		pps.setInt(2, sollstd);
+		pps.setDate(3, ang_von);
+		
 		return pps.executeUpdate();
+	}
+
+	private int getMaxUserId() throws SQLException {
+		this.connect();
+		String stm = "select max(id) from mitarbeiter";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		ResultSet rs = pps.executeQuery();
+		rs.next();
+		return rs.getInt(1) + 1;
 	}
 
 	public Vector<Category> getCategories(int id) {
@@ -181,7 +206,7 @@ public class MySQL {
 		}
 
 		catch (SQLException sqle) {
-			System.out.println(sqle.getMessage());
+			System.out.println("1"+sqle.getMessage());
 		}
 
 		return categories;
@@ -208,7 +233,7 @@ public class MySQL {
 		}
 
 		catch (SQLException sqle) {
-			System.out.println(sqle.getMessage());
+			System.out.println("2"+sqle.getMessage());
 		}
 
 		return districts;
@@ -231,7 +256,6 @@ public class MySQL {
 
 	public boolean writeEmployeeDay(int m_id, Date datum, int fromMinute,
 			int fromHour, int toMinute, int toHour, int pause, int t_id) {
-		System.out.println(t_id);
 		String tagesdatum;
 		String monat;
 		String von;
@@ -323,9 +347,10 @@ public class MySQL {
 			insertStmt.setString(3, tagesdatum);
 			insertStmt.setString(4, von);
 			insertStmt.setString(5, bis);
-			insertStmt.setFloat(7, pauseStunden * 60);
-			insertStmt.setFloat(8, ueberstunden);
 			insertStmt.setInt(6, t_id);
+			insertStmt.setFloat(7, pauseStunden * 60);
+			insertStmt.setFloat(8, ueberstunden*60);
+			System.out.println(ueberstunden);
 			insertStmt.execute();
 		} catch (SQLException sqle) {
 			System.out.println("4" + sqle.getMessage());
@@ -354,25 +379,24 @@ public class MySQL {
 		for (int i = 0; i < activityCount; i++) {
 
 			PreparedStatement insertStmt;
-			String insertString = "INSERT INTO mitarb_taetigkt VALUES (?, ?, ?, ?, ?, ? ,?)";
+			String insertString = "INSERT INTO mitarb_taetigkt(m_id,datum,tagesdatum,dauer,b_id,text) VALUES (?, ?, ?, ?, ? ,?)";
 
 			// float dauerStunden = dauer[i];
 			// dauerStunden /= 60;
 
 			try {
 				insertStmt = con.prepareStatement(insertString);
-
+				System.out.println(m_id);
 				insertStmt.setInt(1, m_id);
 				insertStmt.setString(2, monat + "-01");
 				insertStmt.setString(3, tagesdatum);
-				insertStmt.setTime(4, dauerVon[i]);
-				insertStmt.setTime(5, new Time(23, 0, 0));
-				insertStmt.setInt(6, k_id[i]);
-				insertStmt.setString(7, text[i]);
+				insertStmt.setInt(4, (dauerVon[i].getHours()*60+dauerVon[i].getMinutes()));
+				insertStmt.setInt(5, k_id[i]);
+				insertStmt.setString(6, text[i]);
 				insertStmt.execute();
 
 			} catch (SQLException sqle) {
-				System.out.println(sqle.getMessage());
+				System.out.println("3"+sqle.getMessage());
 			}
 		}
 
@@ -780,16 +804,30 @@ public class MySQL {
 		return false;
 	}
 
-	public boolean newDistrict(int id, String name) throws SQLException {
-		this.connect();
-		boolean retValue = true;
-		String stm = "insert into bereich(id, bezeichnung) values(?,?)";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setInt(1, id);
-		pps.setString(2, name);
-		if(pps.executeUpdate() == 0)
-			retValue = false;
-		return retValue;
+	public boolean newDistrict(int id, String name) {
+		try {
+			ResultSet rs = stmt
+					.executeQuery("select * from bereich where id = " + id);
+			boolean x = true;
+			while (rs.next()) {
+				x = false;
+			}
+
+			if (x) {
+				try {
+					stmt.execute("insert into bereich values(" + id + ",'"
+							+ name + "')");
+				} catch (Exception e) {
+					x = false;
+				}
+			}
+			return x;
+
+		} catch (Exception e) {
+			System.out.println("newDistrict(int id, String name) "
+					+ e.getMessage());
+		}
+		return false;
 	}
 
 	public boolean newCategory(int category_id, String name, int district_id) {
@@ -875,40 +913,43 @@ public class MySQL {
 							+ id + " and tagesdatum = '" + tagesdatum + "'");
 			ResultSet rs2;
 			while (rs.next()) {
-				k_id = rs.getInt("k_id");
+				k_id = rs.getInt("b_id");
 				text = rs.getString("text");
-				BigDecimal bd = rs.getBigDecimal("dauer");
-				float f = bd.floatValue();
-				f *= 60;
-				dauer = (int) f;
-				String dauerStr = Integer.toString(dauer);
-
-				rs2 = stmt2.executeQuery("select * from kategorie where id = "
-						+ k_id);
-				rs2.next();
-				kategorie = k_id + " " + rs2.getString("bezeichnung");
-				b_id = rs2.getInt("b_id");
+				dauer = rs.getInt("dauer");
 
 				ResultSet rs3 = stmt3
 						.executeQuery("select * from bereich where id = "
-								+ b_id);
+								+ k_id);
 				rs3.next();
-				bereich = b_id + " " + rs3.getString("bezeichnung");
+				bereich = k_id + " " + rs3.getString("bezeichnung");
 
-				rs2.close();
+				// rs2.close();
 				rs3.close();
 
 				Vector<String> temp = new Vector<String>();
 				temp.addElement(bereich);
-				temp.addElement(kategorie);
+				// temp.addElement(kategorie);
 				temp.addElement(text);
-				//temp.addElement(dauerStr);
+				int hour=dauer/60;
+				int minute=dauer%60;
+				String show="";
+				if(hour<10)
+					show=show+"0"+hour;
+				else
+					show=show+hour;
+				show=show+":";
+				if(minute<10)
+					show=show+"0"+minute;
+				else
+					show=show+minute;
+				temp.addElement(show);
+				show="";
 
 				values.addElement(temp);
 			}
 
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			return values;
 		}
 		return values;
@@ -1104,7 +1145,7 @@ public class MySQL {
 			retValue.add(new MitarbeiterTag(rs.getInt("id"), rs
 					.getDate("datum"), rs.getDate("tagesdatum"), rs
 					.getInt("t_id"), rs.getTime("von"), rs.getTime("bis"), rs
-					.getInt("pause"), rs2.getInt("sollst_tag"), rs.getFloat("ueberstunden")));
+					.getInt("pause"), rs2.getInt("sollst_tag"), rs.getFloat("ueberstunden")/60));
 		}
 		return retValue;
 	}
@@ -1130,129 +1171,220 @@ public class MySQL {
 		return rs.getFloat(1);
 	}
 
-	public void setNewSollStdAll(int newSollStd, Date changeDate) throws SQLException {
-			this.connect();
-			Vector<User> u = this.getUsers();
-			String stm = "insert into m_sollstunden(m_id, sollst_tag, datum) values(?,?,?)";
-			java.sql.Date sdate = new java.sql.Date(changeDate.getTime());
-			PreparedStatement pps = this.con.prepareStatement(stm);
-			Iterator<User> i = u.iterator();
-			while(i.hasNext()) {
-				pps.setInt(1, i.next().getId());
-				pps.setDate(3, sdate);
-				pps.setInt(2, newSollStd);
-				pps.executeUpdate();
-			}
-			return;
-	}
-
-	public int setNewStandardWorkingTimeForAll(int pause, Time von, Time bis) throws SQLException {
-		this.connect();
-		String stm = "update mitarbeiter set stand_von=?, stand_bis=?, stand_pause=?";
+	public Vector<ZusammenfassungDaten> getHoursOfAllMitarbeiterForZfs(Date von, Date bis, String key) throws SQLException {
+		// TODO Auto-generated method stub
+		java.sql.Date sqlvon=new java.sql.Date(von.getTime());
+		java.sql.Date sqlbis=new java.sql.Date(bis.getTime());
+		Vector<District>vecDistrict = this.getDistricts();
+		Iterator<District>i=vecDistrict.iterator();
+		int s=0;
+		float totalhours=0;
+		Vector<ZusammenfassungDaten> vecZfs=new Vector<ZusammenfassungDaten>();
+		while(i.hasNext()){
+		District d=i.next();
+		String stm= "select sum(dauer) from mitarb_taetigkt where datum >= ? and datum <= ? and b_id = ? and text like ?";
 		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setTime(1, von);
-		pps.setTime(2, bis);
-		pps.setInt(3, pause);
-		return pps.executeUpdate();
+		pps.setDate(1, sqlvon);
+		pps.setDate(2, sqlbis);
+		pps.setInt(3, d.getId());
+		pps.setString(4, key);
+		ResultSet rs = pps.executeQuery();
+		while(rs.next()){
+			s++;
+			System.out.println(s);
+			float hours=rs.getInt(1)/60;
+			totalhours=totalhours+hours;
+			vecZfs.add(new ZusammenfassungDaten(d.getId(),d.getName(),hours) );
+		}
+		}
+		Iterator<ZusammenfassungDaten> id=vecZfs.iterator();
+		while(id.hasNext()){
+			ZusammenfassungDaten zd=id.next();
+			zd.setPercentage((int)((zd.getHours()/totalhours)*100));	
+			System.out.println(zd);
+		}
+		return vecZfs;
+	}
+	
+	public Vector<ZusammenfassungDaten> getHoursOfSpecialMitarbeiterForZfs(Date von, Date bis,User usr, String key) throws SQLException {
+		java.sql.Date sqlvon=new java.sql.Date(von.getTime());
+		java.sql.Date sqlbis=new java.sql.Date(bis.getTime());
+		Vector<District>vecDistrict = this.getDistricts();
+		Iterator<District>i=vecDistrict.iterator();
+		int s=0;
+		float totalhours=0;
+		Vector<ZusammenfassungDaten> vecZfs=new Vector<ZusammenfassungDaten>();
+		while(i.hasNext()){
+		District d=i.next();
+		String stm= "select sum(dauer) from mitarb_taetigkt where datum >= ? and datum <= ? and b_id = ? and m_id = ? and text like ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setDate(1, sqlvon);
+		pps.setDate(2, sqlbis);
+		pps.setInt(3, d.getId());
+		pps.setInt(4, usr.getId());
+		pps.setString(5, key);
+		ResultSet rs = pps.executeQuery();
+		while(rs.next()){
+			s++;
+			System.out.println(s);
+			float hours=rs.getInt(1)/60;
+			totalhours=totalhours+hours;
+			vecZfs.add(new ZusammenfassungDaten(d.getId(),d.getName(),hours) );
+		}
+		}
+		Iterator<ZusammenfassungDaten> id=vecZfs.iterator();
+		while(id.hasNext()){
+			ZusammenfassungDaten zd=id.next();
+			zd.setPercentage((int)((zd.getHours()/totalhours)*100));	
+			System.out.println(zd);
+		}
+		return vecZfs;
 	}
 
+	/*-------------------------------------------------------------------------------------*/
+	
 	public int getMaxDistrictId() throws SQLException {
 		this.connect();
 		String stm = "select max(id) from bereich";
 		PreparedStatement pps = this.con.prepareStatement(stm);
 		ResultSet rs = pps.executeQuery();
 		rs.next();
-		
 		return rs.getInt(1) + 1;
-	}
-
-	public int updateDistrict(int dId, String newName) throws SQLException {
-		this.connect();
-		String stm = "update bereich set bezeichnung = ? where id = ?";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setString(1, newName);
-		pps.setInt(2, dId);
-		return pps.executeUpdate();
 	}
 
 	public int deleteDistrict(int dId) throws SQLException, DistrictInUseException {
 		this.connect();
-		String stm = "delete from bereich where id = ?";
+		int retValue = 0;
 		String check = "select count(*) from mitarb_taetigkt where b_id = ?";
+		String del = "delete from bereich where id = ?";
 		PreparedStatement pps = this.con.prepareStatement(check);
-		pps.setInt(1, dId);
 		ResultSet rs = pps.executeQuery();
-		rs.next();
 		if(rs.getInt(1) != 0)
-			throw new DistrictInUseException("Bereich darf nicht gelöscht werden!");
-		pps = this.con.prepareStatement(stm);
-		pps.setInt(1, dId);
-		return pps.executeUpdate();
-	}
-
-	public int disableUser(User disableUser, Date disableDate) throws SQLException {
-		this.connect();
-		java.sql.Date d = new java.sql.Date(disableDate.getTime());
-		String stm = "update mitarbeiter set ang_bis = ? where id = ?";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setDate(1, d);
-		pps.setInt(2, disableUser.getId());
-		return pps.executeUpdate();
-	}
-
-	public int getMaxUserId() throws SQLException {
-		this.connect();
-		String stm = "select max(id) from mitarbeiter";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		ResultSet rs = pps.executeQuery();
-		rs.next();
-		
-		return rs.getInt(1) + 1;
-	}
-
-	public int deleteTaetigkeit(int id) throws SQLException, DistrictInUseException {
-		this.connect();
-		String stm = "delete from taetigkeit where id = ?";
-		String check = "select count(*) from mitarb_tag where t_id = ?";
-		PreparedStatement pps = this.con.prepareStatement(check);
-		pps.setInt(1, id);
-		ResultSet rs = pps.executeQuery();
-		rs.next();
-		if(rs.getInt(1) != 0)
-			throw new DistrictInUseException("Tätigkeit darf nicht gelöscht werden!");
-		pps = this.con.prepareStatement(stm);
-		pps.setInt(1, id);
-		return pps.executeUpdate();
-	}
-
-	public int updateTaetigkeit(int id, String newName) throws SQLException {
-		this.connect();
-		String stm = "update taetigkeit set bezeichnung = ? where id = ?";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setString(1, newName);
-		pps.setInt(2, id);
-		return pps.executeUpdate();
-	}
-
-	public boolean newTaetigkeit(String newTaetigkeit) throws SQLException {
-		this.connect();
-		boolean retValue = true;
-		String stm = "insert into taetigkeit(id, bezeichnung) values(?,?)";
-		PreparedStatement pps = this.con.prepareStatement(stm);
-		pps.setInt(1, this.getMaxTaetigkeitsId());
-		pps.setString(2, newTaetigkeit);
-		if(pps.executeUpdate() == 0)
-			retValue = false;
+			throw new DistrictInUseException("Bereich darf nicht gelöscht werden");
+		else {
+			pps = this.con.prepareStatement(del);
+			retValue = pps.executeUpdate();
+		}
 		return retValue;
 	}
-	
-	public int getMaxTaetigkeitsId() throws SQLException {
+
+	public int updateDistrict(int dId, String newName) throws SQLException {
+		this.connect();
+		String update = "update bereich set bezeichnung = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(update);
+		pps.setString(1, newName);
+		pps.setInt(2, dId);
+		
+		return pps.executeUpdate();
+	}
+
+	public int newTaetigkeit(String newTaetigkeit) throws SQLException {
+		this.connect();
+		int id = this.getMaxTaetigkeitsId();
+		String ins = "insert into taetigkeit(id,bezeichung) values (?,?)";
+		PreparedStatement pps = this.con.prepareStatement(ins);
+		pps.setInt(1, id);
+		pps.setString(2, newTaetigkeit);
+		return pps.executeUpdate();
+	}
+
+	private int getMaxTaetigkeitsId() throws SQLException {
 		this.connect();
 		String stm = "select max(id) from taetigkeit";
 		PreparedStatement pps = this.con.prepareStatement(stm);
 		ResultSet rs = pps.executeQuery();
 		rs.next();
-		
 		return rs.getInt(1) + 1;
 	}
+
+	public int updateTaetigkeit(int id, String newName) throws SQLException {
+		this.connect();
+		String update = "update taetigkeit set bezeichnung = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(update);
+		pps.setString(1, newName);
+		pps.setInt(2, id);
+		
+		return pps.executeUpdate();
+	}
+
+	public int deleteTaetigkeit(int id) throws DistrictInUseException, SQLException {
+		this.connect();
+		int retValue = 0;
+		String check = "select count(*) from mitarb_tag where t_id = ?";
+		String del = "delete from taetigkeit where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(check);
+		ResultSet rs = pps.executeQuery();
+		if(rs.getInt(1) != 0)
+			throw new DistrictInUseException("Taetigkeit darf nicht gelöscht werden");
+		else {
+			pps = this.con.prepareStatement(del);
+			retValue = pps.executeUpdate();
+		}
+		return retValue;
+	}
+
+	public int disableUser(User disableUser, Date disableDate) throws SQLException {
+		this.connect();
+		java.sql.Date dDate = new java.sql.Date(disableDate.getTime());
+		String disable = "update mitarbeiter set ang_bis = ? where id = ?";
+		PreparedStatement pps = this.con.prepareStatement(disable);
+		pps.setDate(1, dDate);
+		pps.setInt(2, disableUser.getId());
+		
+		return pps.executeUpdate();
+	}
+
+	public int setNewStandardWorkingTimeForAll(int pause, Time von, Time bis) throws SQLException {
+		this.connect();
+		java.sql.Date vons = new java.sql.Date(von.getTime());
+		java.sql.Date biss = new java.sql.Date(bis.getTime());
+		String set = "update mitarbeiter set stand_von = ?, stand_bis = ?, stand_pause = ?";
+		PreparedStatement pps = this.con.prepareStatement(set);
+		pps.setDate(1, vons);
+		pps.setDate(2, biss);
+		pps.setInt(3, pause);
+		
+		return pps.executeUpdate();
+	}
+
+	public int setNewSollStdAll(int newSollStd, Date changeDate) throws SQLException {
+		this.connect();
+		int retValue = 0;
+		java.sql.Date cD = new java.sql.Date(changeDate.getTime());
+		
+		String set = "insert into m_sollstunden(m_id, sollst_tag, datum) values(?,?,?)";
+		Vector<User> us = this.getUsers();
+		
+		PreparedStatement pps;
+		for(User u : us) {
+			pps = this.con.prepareStatement(set);
+			pps.setInt(1, u.getId());
+			pps.setInt(2, newSollStd);
+			pps.setDate(3, cD);
+			retValue = pps.executeUpdate();
+		}
+		return retValue;
+	}
+	
+	public Vector<Mitarbeitertaetigkeit> getMitarbeiterTaetigkeitenforAuswertung(int m_id, int b_id, Date von, Date bis, String key) throws SQLException {
+		Vector<Mitarbeitertaetigkeit> retValue = new Vector<Mitarbeitertaetigkeit>();
+		java.sql.Date vons = new java.sql.Date(von.getTime());
+		java.sql.Date biss = new java.sql.Date(bis.getTime());
+		String stm = "select tagesdatum, text, dauer from mitarb_taetigkt where m_id = ? and b_id = ? and text like ? and tagesdatum between ? and ?";
+		PreparedStatement pps = this.con.prepareStatement(stm);
+		pps.setInt(1, m_id);
+		pps.setInt(2, b_id);
+		pps.setString(3, key);
+		pps.setDate(4, vons);
+		pps.setDate(5, biss);
+		ResultSet rs = pps.executeQuery();
+		while(rs.next()) {
+			Mitarbeitertaetigkeit mt = new Mitarbeitertaetigkeit(rs.getDate(1), rs.getString(2), rs.getInt(3));
+			retValue.add(mt);
+		}
+		
+		return retValue;
+	}
+	
+	 
 }

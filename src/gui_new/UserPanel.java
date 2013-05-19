@@ -1,31 +1,21 @@
 package gui_new;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JPasswordField;
-
-import javax.swing.WindowConstants;
-import javax.swing.border.BevelBorder;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.JPasswordField;
+import javax.swing.border.BevelBorder;
 
 import model.TimeCBModel;
-
 import data.User;
 import database.MySQL;
 import database.WrongPasswordException;
@@ -246,8 +236,9 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 		try {
 			if(this.database.setNewStandardWorkingTime(this.loggedInUser, vont, bist, pause) == 0)
 				this.lblStandZeitInfo.setText("Update der Standardarbeitszeit fehlgeschlagen");
-			else
+			else {
 				this.lblStandZeitInfo.setText("Update der Standardarbeitszeit erfolgreich");
+			}
 		} catch (SQLException e) {
 			this.lblStandZeitInfo.setText("Verbindung zur Datenbank Fehlgeschlagen");
 		}
@@ -258,12 +249,17 @@ public class UserPanel extends javax.swing.JPanel implements ActionListener{
 			this.database.checkPasswordCorrect(new String(this.txtPasswortAendernAlt.getPassword()));
 			String passwd = new String(this.txtPasswortAendernNeu.getPassword());
 			String passwdwdh = new String(this.txtPasswortAendernNeuWdh.getPassword());
-			if(passwd.equals(passwdwdh))
+			if(passwd.equals(passwdwdh)) {
 				this.database.resetPassword(this.loggedInUser.getId(), new String(this.txtPasswortAendernNeu.getPassword()));
+				this.lblPasswortAendernInfo.setText("Ändern des Passworts erfolgreich");
+				this.txtPasswortAendernNeu.setText("");
+				this.txtPasswortAendernNeuWdh.setText("");
+			}
 			else {
 				this.lblPasswortAendernInfo.setText("Neues Passwort stimmt nich überein");
 				this.txtPasswortAendernNeu.setText("");
 				this.txtPasswortAendernNeuWdh.setText("");
+				this.txtPasswortAendernAlt.setText("");
 			}
 		} catch (SQLException e) {
 			this.lblPasswortAendernInfo.setText("Error Connecting to Database");

@@ -231,9 +231,9 @@ public class OutputPanel extends JPanel {
 			
 			HTML_Creator hc = null;
 			if(((User)modelUser.getSelectedItem()).getName().compareTo("admin") == 0)
-				hc = new HTML_Creator(sql.getAllMitarb_tag(month));
-			else
-				hc = new HTML_Creator(sql.getMitarb_tag((User) modelUser.getSelectedItem(), month));
+				//hc = new HTML_Creator(sql.getAllMitarb_tag(month));
+			//else
+				//hc = new HTML_Creator(sql.getMitarb_tag((User) modelUser.getSelectedItem(), month));
 			
 			try{ 
 				Desktop.getDesktop().open(new File("auswertung.html"));
@@ -251,7 +251,7 @@ public class OutputPanel extends JPanel {
 			int m_id = ((User) modelUser.getSelectedItem()).getId();
 			String month = ((Month) modelMonth.getSelectedItem()).toStringForDatabase();
 			jLabelMessageLine.setText("");
-			CSV_Creator csv = new CSV_Creator(sql.getMitarb_tag((User) modelUser.getSelectedItem(), month));
+			//CSV_Creator csv = //new CSV_Creator(sql.getMitarb_tag((User) modelUser.getSelectedItem(), month));
 			try{ 
 				Desktop.getDesktop().open(new File("auswertung.csv"));
 			}catch(Exception e){;}

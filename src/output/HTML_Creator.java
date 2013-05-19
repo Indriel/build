@@ -1,11 +1,18 @@
 package output;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
+import javax.jws.soap.SOAPBinding.Use;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,20 +24,228 @@ import org.w3c.dom.Text;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
+import data.District;
+import data.MitarbeiterMonat;
+import data.MitarbeiterTag;
+import data.Mitarbeitertaetigkeit;
+import data.User;
+import data.ZusammenfassungDaten;
+import database.MySQL;
+
 
 @SuppressWarnings("restriction")
 public class HTML_Creator {
 	
-	private Vector<Vector<String>> myData = new Vector<Vector<String>>();
+	public static final String DETAIL = "Detail";
+	public static final String ZEITAUFZEICHUNG = "Zeitaufzeichung";
+	public static final String ZUSAMMENFASSUNG = "Zusammenfassung";
+	private String type;
+	private MySQL database;
 	
-	public HTML_Creator(Vector<Vector<String>> vk)
+	SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+	SimpleDateFormat mona = new SimpleDateFormat("MMMM yyyy");
+	SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
+	
+	public HTML_Creator(String type)
 	{
-		myData = vk;
-		XMLCreator x = new XMLCreator(myData);
+		this.type = type;
+		this.database = MySQL.getInstance();
 	}
 	
 	
+	public void create(boolean all, User usr, Date von, Date bis, String keyword) throws SQLException, IOException {
+		if(type.equals(HTML_Creator.DETAIL)) {
+			this.createDetail(all,usr,von,bis,keyword);
+		}
+		else if(type.equals(HTML_Creator.ZEITAUFZEICHUNG)) {
+			this.createZeitaufzeichung(all, usr, von, bis);
+		}
+		else if(type.equals(HTML_Creator.ZUSAMMENFASSUNG)) {
+			this.createZusammenfassung(all,usr,von,bis,keyword);
+		}
+	}
 	
+	private void createZusammenfassung(boolean all, User usr, Date von,
+			Date bis, String keyword) throws SQLException, IOException {
+Vector<ZusammenfassungDaten> data;
+		
+		String name;
+		
+		if(all) {
+			data = this.database.getHoursOfAllMitarbeiterForZfs(von, bis, keyword);
+			name = "Gesamt";
+		}
+		else {
+			data = this.database.getHoursOfSpecialMitarbeiterForZfs(von, bis, usr, keyword);
+			name = usr.getName();
+		}
+		
+		
+		File output = new File("auswetung.html");
+		FileWriter outFile = new FileWriter(output);
+		PrintWriter out = new PrintWriter(outFile);			
+		
+		out.println("<html>");
+		out.println("<head>");
+		out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\">");
+		out.println("</head>");
+		out.println("<body>");
+		
+		out.print(name+";"+sdf.format(von)+"-"+sdf.format(bis)+";"+"Keywort: " + keyword);
+		out.println("<h1>" + name + " " + mona.format(von) + "-" + mona.format(bis) + " Keywort: " + keyword + "</h1>");
+		out.println("<br >");
+		out.println("<br >");
+		out.println("<table>");
+		out.println("<tr>");
+		for(ZusammenfassungDaten z : data) {
+			out.println("<td>" + z.getD_name() + "</td>");
+		}
+		out.println("</tr>");
+		out.println("<tr>");
+		for(ZusammenfassungDaten z : data) {
+			out.println("<td>" + z.getHours() + " h</td>");
+		}
+		out.println("</tr>");
+		out.println("<tr>");
+		for(ZusammenfassungDaten z : data) {
+			out.println("<td>"+ z.getPercentage() +" %</td>");
+		}
+		out.println("</tr>");
+		out.println("</table>");
+		out.println("</body>");
+		out.println("</html>");
+		out.close();
+		System.out.println("HTML GENERATION COMPLETED!!!!!");
+		Desktop.getDesktop().open(output);
+	}
+
+
+	private void createZeitaufzeichung(boolean all, User usr, Date von, Date bis) throws IOException, SQLException {
+		Vector<MitarbeiterTag> tage;
+		Vector<MitarbeiterMonat> monate;
+		Vector<User> mitarbeiter;
+		
+		if(all) {
+			mitarbeiter = this.database.getUsers();
+		}
+		else {
+			mitarbeiter = new Vector<User>();
+			mitarbeiter.add(usr);
+		}
+		
+		File output = new File("auswetung.html");
+		FileWriter outFile = new FileWriter(output);
+		PrintWriter out = new PrintWriter(outFile);			
+		
+		out.println("<html>");
+		out.println("<head>");
+		out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\">");
+		out.println("</head>");
+		out.println("<body>");
+		
+		for(User u : mitarbeiter) {
+			out.println("<h1>" + u.getName() + " " + mona.format(von) + "-" + mona.format(bis) + "</h1>");
+			out.println("<br >");
+			out.println("<br >");
+			monate = this.database.getMitarbeiterMonatForAuswertung(u, von, bis);
+			for(MitarbeiterMonat m : monate) {
+				out.println("<h2>" + mona.format(m.getDatum()) + "</h2>");
+				out.println("<br >");
+				out.println("<br >");
+				out.println("<table>");
+				out.println("<tr>");
+				out.println("<td>Datum</td> <td>Arbeitsbeginn</td> <td>Arbeitsende</td> <td>Mittagspause</td> <td>Arbeitsstunden</td> <td>&Uuml;berstunden</td> <td>Anmerkung</td>");
+				out.println("</tr>");
+				tage = this.database.getMitarbeiterTagForAuswertung(u, m.getDatum());
+				float sum = 0;
+				for(MitarbeiterTag t : tage) {
+					sum += t.getFloatUeberstunden();
+					out.println("<tr>");
+					out.println("<td>"+sdf.format(t.getTagesdatum())+"</td><td>"+formatTime.format(t.getVon())+"</td><td>"+formatTime.format(t.getBis())+"</td><td>"+formatTime.format(t.getPause())+"</td><td>"+t.getFloatUeberstunden()+"</td><td>"+database.getActivity(t.getTaetigkeits_id())+"</td>");
+					out.println("</tr>");
+				}
+				out.println("<tr>");
+				out.println("<td></td><td></td><td></td><td></td><td></td><td>Summe</td><td>" + sum + "</td>");
+				out.println("</tr>");
+				float monueber = this.database.getUebertragsSumme(m.getDatum());
+				out.println("<tr>");
+				out.println("<td></td><td></td><td></td><td></td><td></td><td>&Uuml;bertrag</td><td>" + monueber + "</td>");
+				out.println("</tr>");
+				out.println("<tr>");
+				out.println("<td></td><td></td><td></td><td></td><td></td><td>GESAMT</td><td>" + (sum+monueber) + "</td>");
+				out.println("</tr>");
+				out.println("<br >");
+				out.println("<br >");
+			}
+			out.println("<br >");
+			out.println("<br >");
+		}
+		out.close();
+		out.println("</body>");
+		out.println("</html>");
+		System.out.println("HTML GENERATION COMPLETED!!!!!");
+		Desktop.getDesktop().open(output);
+	}
+
+
+	private void createDetail(boolean all, User usr, Date von, Date bis,
+			String keyword) throws SQLException, IOException {
+		
+		
+		Vector<User> mitarbeiter;
+		Vector<District> bereiche = this.database.getDistricts();
+		Vector<Mitarbeitertaetigkeit> taets;
+		
+		if(all) {
+			mitarbeiter = this.database.getUsers();
+		}
+		else {
+			mitarbeiter = new Vector<User>();
+			mitarbeiter.add(usr);
+		}
+		
+		File output = new File("auswertung.html");
+		FileWriter fileout = new FileWriter(output);
+		PrintWriter out = new PrintWriter(fileout);
+		
+		out.println("<html>");
+		out.println("<head>");
+		out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"format.css\">");
+		out.println("</head>");
+		out.println("<body>");
+		for(User u : mitarbeiter) {
+			out.println("<h1>" + u.getName() + " " + mona.format(von) + "-" + mona.format(bis) + " Keyword: " + keyword + "</h1>");
+			for(District d : bereiche) {
+				out.println("<h2>Bereich-" + d.getName() + "</h2>");
+				out.println("<table>");
+				out.println("<tr>");
+				out.println("<td>Datum</td> <td>Beschreibung</td> <td>Dauer</td>");
+				out.println("</tr>");
+				taets = this.database.getMitarbeiterTaetigkeitenforAuswertung(u.getId(), d.getId(), von, bis, keyword);
+				int sum = 0;
+				for(Mitarbeitertaetigkeit mt : taets) {
+					out.println("<tr>");
+					out.println("<td>" + sdf.format(mt.getDatum()) + "</td><td>" + mt.getBeschreibung() + "</td><td>" + mt.getDauer() + "</td>");
+					out.println("</tr>");
+					sum += mt.getDauer();
+				}
+				out.println("<tr>");
+				out.println("<td></td><td>SUMME</td><td>"+sum+"</td>");
+				//out.println("");
+				out.println("</tr>");
+				out.println("</table>");
+			}
+			out.println("<br >");
+			out.println("<br >");
+		}
+		out.println("</body>");
+		out.println("</html>");
+		
+		out.close();
+		System.out.println("HTML_Generation completed");
+		Desktop.getDesktop().open(output);
+	}
+
 	class XMLCreator{
 		//No generics
 		Vector<Vector<String>> myData = null;
